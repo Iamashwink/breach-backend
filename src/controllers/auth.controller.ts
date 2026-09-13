@@ -1,4 +1,4 @@
-import { findProfileByEmail, findProfileById, createProfile } from "@/models/profile.model";
+import { findProfileByEmail, findProfileByUsername, findProfileById, createProfile } from "@/models/profile.model";
 import { hashPassword, verifyPassword } from "@/services/auth.service";
 import { ConflictError, UnauthorizedError } from "@/errors/error-types";
 
@@ -11,8 +11,12 @@ export const signup = async ({
   body: { username: string; email: string; password: string };
   jwt: JwtSigner;
 }) => {
-  const existing = await findProfileByEmail(body.email);
-  if (existing) throw new ConflictError("Email already in use");
+  const [existingEmail, existingUsername] = await Promise.all([
+    findProfileByEmail(body.email),
+    findProfileByUsername(body.username),
+  ]);
+  if (existingEmail) throw new ConflictError("Email already in use");
+  if (existingUsername) throw new ConflictError("Username already taken");
 
   const passwordHash = await hashPassword(body.password);
   const profile = await createProfile({ username: body.username, email: body.email, passwordHash });

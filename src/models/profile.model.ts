@@ -2,6 +2,15 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { profiles } from "@/schema/dao/profiles";
 
+export async function findProfileByUsername(username: string) {
+  return db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.username, username))
+    .limit(1)
+    .then((r) => r[0] ?? null);
+}
+
 export async function findProfileByEmail(email: string) {
   return db
     .select()
