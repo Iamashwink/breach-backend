@@ -1,22 +1,16 @@
-import { Elysia, t } from "elysia";
-import { jwtPlugin } from "@/plugins/jwt";
-import { authGuard } from "@/plugins/auth-guard";
-import { signup, login, me } from "@/controllers/auth.controller";
+import Elysia from "elysia";
+import { signup, login } from "@/controllers/auth.controller";
+import { findProfileById } from "@/models/profile.model";
+import { authGuard } from "@/middlewares/auth-guard";
+import { signupBody, loginBody } from "@/schema/dto/auth.dto";
+import { NotFoundError } from "@/errors/error-types";
 
 export const authRoutes = new Elysia({ prefix: "/auth" })
-  .use(jwtPlugin)
-  .post("/signup", signup, {
-    body: t.Object({
-      username: t.String({ minLength: 3, maxLength: 32 }),
-      email: t.String({ format: "email" }),
-      password: t.String({ minLength: 8 }),
-    }),
-  })
-  .post("/login", login, {
-    body: t.Object({
-      email: t.String({ format: "email" }),
-      password: t.String(),
-    }),
-  })
+  .post("/signup", ({ body }) => signup(body), { body: signupBody })
+  .post("/login", ({ body }) => login(body), { body: loginBody })
   .use(authGuard)
-  .get("/me", me);
+  .get("/me", async ({ user }) => {
+    const profile = await findProfileById(user.id);
+    if (!profile) throw new NotFoundError();
+    return { id: profile.id, username: profile.username, role: profile.role };
+  });

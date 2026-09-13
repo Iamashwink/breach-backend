@@ -6,5 +6,4 @@ export const timeGlitchState = pgTable("time_glitch_state", {
   isActive: boolean("is_active").default(false).notNull(),
   activatedAt: timestamp("activated_at", { withTimezone: true }),
   durationSeconds: integer("duration_seconds").default(600).notNull(),
-  intervalSeconds: integer("interval_seconds").default(3600).notNull(),
 });
