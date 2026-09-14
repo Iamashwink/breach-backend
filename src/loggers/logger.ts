@@ -3,9 +3,11 @@ import pino from "pino";
 /**
  * Single shared logger instance. Import this everywhere instead of
  * reaching for `console.log`.
+ *
+ * Logging is always verbose (level "trace"), regardless of environment.
  */
 export const logger = pino({
-  level: process.env.LOG_LEVEL ?? "info",
+  level: "trace",
   transport:
     process.env.NODE_ENV === "production"
       ? undefined
