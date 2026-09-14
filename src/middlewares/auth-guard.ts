@@ -23,9 +23,18 @@ export const authGuard = new Elysia({ name: "auth-guard" }).derive(
 );
 
 /** Same as `authGuard`, plus requires `user.isAdmin`. */
-export const adminGuard = new Elysia({ name: "admin-guard" })
-  .use(authGuard)
-  .derive({ as: "scoped" }, (context) => {
-    if (!context.user?.isAdmin) throw new ForbiddenError();
-    return {};
-  });
+export const adminGuard = new Elysia({ name: "admin-guard" }).derive(
+  { as: "scoped" },
+  async ({ headers }) => {
+    const auth = headers["authorization"];
+    if (!auth?.startsWith("Bearer ")) throw new UnauthorizedError("Missing token");
+    try {
+      const payload = await verifyToken(auth.slice("Bearer ".length));
+      if (!payload.isAdmin) throw new ForbiddenError();
+      return { user: { id: payload.sub, isAdmin: payload.isAdmin } };
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new UnauthorizedError("Invalid or expired token");
+    }
+  },
+);
