@@ -10,6 +10,7 @@ import {
   removeHint,
   unlockHint,
 } from "@/services/challenges/challenge.service";
+import { submitFlag } from "@/services/challenges/submission.service";
 
 export async function handleListChallengesAdmin(eventId: string) {
   return listChallengesAdmin(eventId);
@@ -66,4 +67,16 @@ export async function handleUnlockHint(
 ) {
   logger.info({ hintId, challengeId }, "Unlocking hint");
   return unlockHint(hintId, challengeId, eventId, userId);
+}
+
+export async function handleSubmitFlag(
+  userId: string,
+  eventId: string,
+  challengeId: string,
+  flag: string,
+) {
+  logger.info({ userId, challengeId }, "Flag submission");
+  const result = await submitFlag(userId, eventId, challengeId, flag);
+  logger.info({ challengeId, verdict: result.verdict }, "Submission verdict");
+  return result;
 }

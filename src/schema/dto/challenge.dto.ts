@@ -35,3 +35,7 @@ export const createHintBody = t.Object({
   sortOrder: t.Optional(t.Number({ minimum: 0 })),
   requiresHintId: t.Optional(t.String()),
 });
+
+export const submitFlagBody = t.Object({
+  flag: t.String({ minLength: 1 }),
+});

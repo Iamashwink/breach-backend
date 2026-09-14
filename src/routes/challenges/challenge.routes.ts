@@ -8,10 +8,11 @@ import {
   handleListChallengesPlayer,
   handleListHints,
   handleListHintsPlayer,
+  handleSubmitFlag,
   handleUnlockHint,
   handleUpdateChallenge,
 } from "@/controllers/challenges/challenge.controller";
-import { createChallengeBody, createHintBody, updateChallengeBody } from "@/schema/dto/challenge.dto";
+import { createChallengeBody, createHintBody, submitFlagBody, updateChallengeBody } from "@/schema/dto/challenge.dto";
 
 const eventParams = t.Object({ eventId: t.String() });
 const challengeParams = t.Object({ eventId: t.String(), challengeId: t.String() });
@@ -33,6 +34,11 @@ export const challengeRoutes = new Elysia()
     "/events/:eventId/challenges/:challengeId/hints/:hintId/unlock",
     ({ params, user }) => handleUnlockHint(params.hintId, params.challengeId, params.eventId, user.id),
     { params: hintParams },
+  )
+  .post(
+    "/events/:eventId/challenges/:challengeId/submit",
+    ({ params, body, user }) => handleSubmitFlag(user.id, params.eventId, params.challengeId, body.flag),
+    { params: challengeParams, body: submitFlagBody },
   );
 
 export const adminChallengeRoutes = new Elysia()
