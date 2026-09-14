@@ -20,24 +20,28 @@ src/
 ├── loggers/            # shared pino logger instance
 ├── errors/            # custom error types (AppError, NotFoundError, ...)
 ├── db/                # Drizzle client + generated migrations
-├── models/            # Drizzle table/view definitions — the ONLY place that
-│                      #   imports db/client.ts, one file per resource, plus
-│                      #   columns.ts/authorship.ts/custom-types.ts (shared
-│                      #   column sets and enums) and core/ + event-specific/
+├── models/            # Drizzle table/view definitions only — no queries,
+│                      #   one file per resource, plus columns.ts/authorship.ts/
+│                      #   custom-types.ts (shared column sets and enums) and
+│                      #   core/ + event-specific/
+├── repositories/        # query functions against models/ — the ONLY place
+│                      #   that imports db/client.ts, one file per resource
 ├── services/           # business logic / use cases, one subfolder per resource
 ├── controllers/         # parses requests, calls services, shapes responses, one subfolder per resource
 ├── routes/            # Elysia route definitions per resource + router.ts aggregating them all
 ├── middlewares/         # cross-cutting Elysia plugins (error handling, auth, ...)
+├── schema/            # dto/ — Elysia `t.Object` request/response validators,
+│                      #   one file per resource
 ├── utils/             # generic, business-logic-free helpers
-└── types/             # shared TS types not tied to a schema (request/response DTOs, etc.)
+└── types/             # shared TS types not tied to a schema (non-DTO shared types)
 ```
 
 ### Layer rules
 
-- **routes → controllers → services → models → db.** Each layer only calls the one directly below it.
-- **`services` never touch Drizzle/the DB directly** — only `models` may import `db/client.ts`. This keeps business logic testable and swappable independent of persistence.
-- **`controllers` hold no business logic** — they validate input (via `types`/request schemas), delegate to `services`, and shape the HTTP response.
-- New resources get a same-named subfolder in `routes`, `controllers`, `services`, and a file in `models`.
+- **routes → controllers → services → repositories → models → db.** Each layer only calls the one directly below it.
+- **`services` never touch Drizzle/the DB directly** — only `repositories` may import `db/client.ts`. `models` are pure table/view definitions with no query code. This keeps business logic testable and swappable independent of persistence.
+- **`controllers` hold no business logic** — they validate input (via `schema/dto` request schemas), delegate to `services`, and shape the HTTP response.
+- New resources get a same-named subfolder in `routes`, `controllers`, `services`, and a file in `models`, `repositories`, and `schema/dto`.
 
 ## Data model
 
