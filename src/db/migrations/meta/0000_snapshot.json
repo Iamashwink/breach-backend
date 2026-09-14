@@ -1,0 +1,3278 @@
+{
+  "id": "2bc57540-0d04-41bf-b8e3-536e69fed250",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.core_user": {
+      "name": "core_user",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_admin": {
+          "name": "is_admin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_banned": {
+          "name": "is_banned",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "banned_at": {
+          "name": "banned_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "banned_reason": {
+          "name": "banned_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_login_at": {
+          "name": "last_login_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "core_user_username_uq": {
+          "name": "core_user_username_uq",
+          "columns": [
+            {
+              "expression": "lower(\"username\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "core_user_email_uq": {
+          "name": "core_user_email_uq",
+          "columns": [
+            {
+              "expression": "lower(\"email\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.core_event": {
+      "name": "core_event",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_frozen": {
+          "name": "is_frozen",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "frozen_at": {
+          "name": "frozen_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "core_event_created_by_core_user_id_fk": {
+          "name": "core_event_created_by_core_user_id_fk",
+          "tableFrom": "core_event",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "core_event_updated_by_core_user_id_fk": {
+          "name": "core_event_updated_by_core_user_id_fk",
+          "tableFrom": "core_event",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "updated_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "core_event_slug_unique": {
+          "name": "core_event_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "core_event_time_order_check": {
+          "name": "core_event_time_order_check",
+          "value": "\"core_event\".\"ends_at\" IS NULL OR \"core_event\".\"starts_at\" IS NULL OR \"core_event\".\"ends_at\" > \"core_event\".\"starts_at\""
+        },
+        "core_event_published_has_window_check": {
+          "name": "core_event_published_has_window_check",
+          "value": "NOT \"core_event\".\"is_published\" OR (\"core_event\".\"starts_at\" IS NOT NULL AND \"core_event\".\"ends_at\" IS NOT NULL)"
+        },
+        "core_event_frozen_at_check": {
+          "name": "core_event_frozen_at_check",
+          "value": "NOT \"core_event\".\"is_frozen\" OR \"core_event\".\"frozen_at\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.core_event_user": {
+      "name": "core_event_user",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "joined_at": {
+          "name": "joined_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "core_event_user_user_idx": {
+          "name": "core_event_user_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "core_event_user_event_id_core_event_id_fk": {
+          "name": "core_event_user_event_id_core_event_id_fk",
+          "tableFrom": "core_event_user",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "core_event_user_user_id_core_user_id_fk": {
+          "name": "core_event_user_user_id_core_user_id_fk",
+          "tableFrom": "core_event_user",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "core_event_user_event_id_user_id_pk": {
+          "name": "core_event_user_event_id_user_id_pk",
+          "columns": [
+            "event_id",
+            "user_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.core_team": {
+      "name": "core_team",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_solo": {
+          "name": "is_solo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "join_code": {
+          "name": "join_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_user": {
+          "name": "created_by_user",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_hidden": {
+          "name": "is_hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "disqualified_at": {
+          "name": "disqualified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "disqualified_by": {
+          "name": "disqualified_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "disqualified_reason": {
+          "name": "disqualified_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "registered_at": {
+          "name": "registered_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "core_team_event_id_core_event_id_fk": {
+          "name": "core_team_event_id_core_event_id_fk",
+          "tableFrom": "core_team",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "core_team_created_by_user_core_user_id_fk": {
+          "name": "core_team_created_by_user_core_user_id_fk",
+          "tableFrom": "core_team",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "created_by_user"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "core_team_disqualified_by_core_user_id_fk": {
+          "name": "core_team_disqualified_by_core_user_id_fk",
+          "tableFrom": "core_team",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "disqualified_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "core_team_join_code_unique": {
+          "name": "core_team_join_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "join_code"
+          ]
+        },
+        "core_team_event_id_name_unique": {
+          "name": "core_team_event_id_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_id",
+            "name"
+          ]
+        },
+        "core_team_id_event_id_unique": {
+          "name": "core_team_id_event_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "event_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "core_team_disqualified_reason_check": {
+          "name": "core_team_disqualified_reason_check",
+          "value": "\"core_team\".\"disqualified_at\" IS NULL OR \"core_team\".\"disqualified_reason\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.core_team_member": {
+      "name": "core_team_member",
+      "schema": "",
+      "columns": {
+        "team_id": {
+          "name": "team_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "team_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'member'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "core_team_one_captain": {
+          "name": "core_team_one_captain",
+          "columns": [
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"core_team_member\".\"role\" = 'captain'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "core_team_member_user_idx": {
+          "name": "core_team_member_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "core_team_member_team_id_event_id_core_team_id_event_id_fk": {
+          "name": "core_team_member_team_id_event_id_core_team_id_event_id_fk",
+          "tableFrom": "core_team_member",
+          "tableTo": "core_team",
+          "columnsFrom": [
+            "team_id",
+            "event_id"
+          ],
+          "columnsTo": [
+            "id",
+            "event_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "core_team_member_event_id_user_id_core_event_user_event_id_user_id_fk": {
+          "name": "core_team_member_event_id_user_id_core_event_user_event_id_user_id_fk",
+          "tableFrom": "core_team_member",
+          "tableTo": "core_event_user",
+          "columnsFrom": [
+            "event_id",
+            "user_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "user_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "core_team_member_user_id_core_user_id_fk": {
+          "name": "core_team_member_user_id_core_user_id_fk",
+          "tableFrom": "core_team_member",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "core_team_member_team_id_user_id_pk": {
+          "name": "core_team_member_team_id_user_id_pk",
+          "columns": [
+            "team_id",
+            "user_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "core_team_member_event_user_uq": {
+          "name": "core_team_member_event_user_uq",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_id",
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.core_category": {
+      "name": "core_category",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "smallserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "core_category_created_by_core_user_id_fk": {
+          "name": "core_category_created_by_core_user_id_fk",
+          "tableFrom": "core_category",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "core_category_updated_by_core_user_id_fk": {
+          "name": "core_category_updated_by_core_user_id_fk",
+          "tableFrom": "core_category",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "updated_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "core_category_name_unique": {
+          "name": "core_category_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.core_challenge": {
+      "name": "core_challenge",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "difficulty": {
+          "name": "difficulty",
+          "type": "challenge_difficulty",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "initial_points": {
+          "name": "initial_points",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "min_points": {
+          "name": "min_points",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "decay_threshold": {
+          "name": "decay_threshold",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 25
+        },
+        "decay_type": {
+          "name": "decay_type",
+          "type": "decay_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'logarithmic'"
+        },
+        "flag_hash": {
+          "name": "flag_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "challenge_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'hidden'"
+        },
+        "max_attempts": {
+          "name": "max_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "author": {
+          "name": "author",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "core_challenge_event_state_idx": {
+          "name": "core_challenge_event_state_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "state",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "core_challenge_category_idx": {
+          "name": "core_challenge_category_idx",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "core_challenge_event_id_core_event_id_fk": {
+          "name": "core_challenge_event_id_core_event_id_fk",
+          "tableFrom": "core_challenge",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "core_challenge_category_id_core_category_id_fk": {
+          "name": "core_challenge_category_id_core_category_id_fk",
+          "tableFrom": "core_challenge",
+          "tableTo": "core_category",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "core_challenge_created_by_core_user_id_fk": {
+          "name": "core_challenge_created_by_core_user_id_fk",
+          "tableFrom": "core_challenge",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "core_challenge_updated_by_core_user_id_fk": {
+          "name": "core_challenge_updated_by_core_user_id_fk",
+          "tableFrom": "core_challenge",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "updated_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "core_challenge_id_event_id_unique": {
+          "name": "core_challenge_id_event_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "event_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "core_challenge_flag_check": {
+          "name": "core_challenge_flag_check",
+          "value": "\"core_challenge\".\"flag_hash\" <> ''"
+        },
+        "core_challenge_points_check": {
+          "name": "core_challenge_points_check",
+          "value": "\"core_challenge\".\"initial_points\" > 0"
+        },
+        "core_challenge_min_points_check": {
+          "name": "core_challenge_min_points_check",
+          "value": "\"core_challenge\".\"min_points\" > 0"
+        },
+        "core_challenge_min_le_initial_check": {
+          "name": "core_challenge_min_le_initial_check",
+          "value": "\"core_challenge\".\"min_points\" <= \"core_challenge\".\"initial_points\""
+        },
+        "core_challenge_decay_threshold_check": {
+          "name": "core_challenge_decay_threshold_check",
+          "value": "\"core_challenge\".\"decay_threshold\" > 0"
+        },
+        "core_challenge_max_attempts_check": {
+          "name": "core_challenge_max_attempts_check",
+          "value": "\"core_challenge\".\"max_attempts\" IS NULL OR \"core_challenge\".\"max_attempts\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.core_hint": {
+      "name": "core_hint",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "challenge_id": {
+          "name": "challenge_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cost": {
+          "name": "cost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "requires_hint_id": {
+          "name": "requires_hint_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "core_hint_created_by_core_user_id_fk": {
+          "name": "core_hint_created_by_core_user_id_fk",
+          "tableFrom": "core_hint",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "core_hint_updated_by_core_user_id_fk": {
+          "name": "core_hint_updated_by_core_user_id_fk",
+          "tableFrom": "core_hint",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "updated_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "core_hint_event_id_core_event_id_fk": {
+          "name": "core_hint_event_id_core_event_id_fk",
+          "tableFrom": "core_hint",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "core_hint_event_id_challenge_id_core_challenge_event_id_id_fk": {
+          "name": "core_hint_event_id_challenge_id_core_challenge_event_id_id_fk",
+          "tableFrom": "core_hint",
+          "tableTo": "core_challenge",
+          "columnsFrom": [
+            "event_id",
+            "challenge_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "core_hint_requires_hint_id_core_hint_id_fk": {
+          "name": "core_hint_requires_hint_id_core_hint_id_fk",
+          "tableFrom": "core_hint",
+          "tableTo": "core_hint",
+          "columnsFrom": [
+            "requires_hint_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "core_hint_id_event_id_unique": {
+          "name": "core_hint_id_event_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "event_id"
+          ]
+        },
+        "core_hint_challenge_id_sort_order_unique": {
+          "name": "core_hint_challenge_id_sort_order_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "challenge_id",
+            "sort_order"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "core_hint_cost_check": {
+          "name": "core_hint_cost_check",
+          "value": "\"core_hint\".\"cost\" >= 0"
+        },
+        "core_hint_sort_order_check": {
+          "name": "core_hint_sort_order_check",
+          "value": "\"core_hint\".\"sort_order\" >= 0"
+        },
+        "core_hint_not_self_check": {
+          "name": "core_hint_not_self_check",
+          "value": "\"core_hint\".\"requires_hint_id\" IS NULL OR \"core_hint\".\"requires_hint_id\" <> \"core_hint\".\"id\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.core_hint_unlock": {
+      "name": "core_hint_unlock",
+      "schema": "",
+      "columns": {
+        "team_id": {
+          "name": "team_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hint_id": {
+          "name": "hint_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cost_paid": {
+          "name": "cost_paid",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unlocked_by": {
+          "name": "unlocked_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "unlocked_at": {
+          "name": "unlocked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "core_hint_unlock_event_team_idx": {
+          "name": "core_hint_unlock_event_team_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "core_hint_unlock_event_id_core_event_id_fk": {
+          "name": "core_hint_unlock_event_id_core_event_id_fk",
+          "tableFrom": "core_hint_unlock",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "core_hint_unlock_event_id_team_id_core_team_event_id_id_fk": {
+          "name": "core_hint_unlock_event_id_team_id_core_team_event_id_id_fk",
+          "tableFrom": "core_hint_unlock",
+          "tableTo": "core_team",
+          "columnsFrom": [
+            "event_id",
+            "team_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "core_hint_unlock_event_id_hint_id_core_hint_event_id_id_fk": {
+          "name": "core_hint_unlock_event_id_hint_id_core_hint_event_id_id_fk",
+          "tableFrom": "core_hint_unlock",
+          "tableTo": "core_hint",
+          "columnsFrom": [
+            "event_id",
+            "hint_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "core_hint_unlock_event_id_unlocked_by_core_team_member_event_id_user_id_fk": {
+          "name": "core_hint_unlock_event_id_unlocked_by_core_team_member_event_id_user_id_fk",
+          "tableFrom": "core_hint_unlock",
+          "tableTo": "core_team_member",
+          "columnsFrom": [
+            "event_id",
+            "unlocked_by"
+          ],
+          "columnsTo": [
+            "event_id",
+            "user_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "core_hint_unlock_team_id_hint_id_pk": {
+          "name": "core_hint_unlock_team_id_hint_id_pk",
+          "columns": [
+            "team_id",
+            "hint_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.core_submission": {
+      "name": "core_submission",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitted_by": {
+          "name": "submitted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "challenge_id": {
+          "name": "challenge_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "raw_input": {
+          "name": "raw_input",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verdict": {
+          "name": "verdict",
+          "type": "submission_verdict",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "inet",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "core_submission_team_challenge_idx": {
+          "name": "core_submission_team_challenge_idx",
+          "columns": [
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "challenge_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "core_submission_challenge_verdict_idx": {
+          "name": "core_submission_challenge_verdict_idx",
+          "columns": [
+            {
+              "expression": "challenge_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "verdict",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "core_submission_event_submitted_at_idx": {
+          "name": "core_submission_event_submitted_at_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "submitted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "core_submission_rate_limit_idx": {
+          "name": "core_submission_rate_limit_idx",
+          "columns": [
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "submitted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "core_submission_event_id_core_event_id_fk": {
+          "name": "core_submission_event_id_core_event_id_fk",
+          "tableFrom": "core_submission",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "core_submission_event_id_team_id_core_team_event_id_id_fk": {
+          "name": "core_submission_event_id_team_id_core_team_event_id_id_fk",
+          "tableFrom": "core_submission",
+          "tableTo": "core_team",
+          "columnsFrom": [
+            "event_id",
+            "team_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "core_submission_event_id_challenge_id_core_challenge_event_id_id_fk": {
+          "name": "core_submission_event_id_challenge_id_core_challenge_event_id_id_fk",
+          "tableFrom": "core_submission",
+          "tableTo": "core_challenge",
+          "columnsFrom": [
+            "event_id",
+            "challenge_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "core_submission_event_id_submitted_by_core_team_member_event_id_user_id_fk": {
+          "name": "core_submission_event_id_submitted_by_core_team_member_event_id_user_id_fk",
+          "tableFrom": "core_submission",
+          "tableTo": "core_team_member",
+          "columnsFrom": [
+            "event_id",
+            "submitted_by"
+          ],
+          "columnsTo": [
+            "event_id",
+            "user_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "core_submission_id_event_id_unique": {
+          "name": "core_submission_id_event_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "event_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.core_solve": {
+      "name": "core_solve",
+      "schema": "",
+      "columns": {
+        "team_id": {
+          "name": "team_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "challenge_id": {
+          "name": "challenge_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "solved_by": {
+          "name": "solved_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "submission_id": {
+          "name": "submission_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "base_points": {
+          "name": "base_points",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "multiplier": {
+          "name": "multiplier",
+          "type": "numeric(4, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'1.00'"
+        },
+        "points_awarded": {
+          "name": "points_awarded",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "solve_order": {
+          "name": "solve_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "solved_at": {
+          "name": "solved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revoked_by": {
+          "name": "revoked_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revoked_reason": {
+          "name": "revoked_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "core_solve_challenge_solved_at_idx": {
+          "name": "core_solve_challenge_solved_at_idx",
+          "columns": [
+            {
+              "expression": "challenge_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "solved_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "core_solve_team_idx": {
+          "name": "core_solve_team_idx",
+          "columns": [
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "core_solve_event_solved_at_idx": {
+          "name": "core_solve_event_solved_at_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "solved_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "core_solve_revoked_by_core_user_id_fk": {
+          "name": "core_solve_revoked_by_core_user_id_fk",
+          "tableFrom": "core_solve",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "revoked_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "core_solve_event_id_core_event_id_fk": {
+          "name": "core_solve_event_id_core_event_id_fk",
+          "tableFrom": "core_solve",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "core_solve_event_id_team_id_core_team_event_id_id_fk": {
+          "name": "core_solve_event_id_team_id_core_team_event_id_id_fk",
+          "tableFrom": "core_solve",
+          "tableTo": "core_team",
+          "columnsFrom": [
+            "event_id",
+            "team_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "core_solve_event_id_challenge_id_core_challenge_event_id_id_fk": {
+          "name": "core_solve_event_id_challenge_id_core_challenge_event_id_id_fk",
+          "tableFrom": "core_solve",
+          "tableTo": "core_challenge",
+          "columnsFrom": [
+            "event_id",
+            "challenge_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "core_solve_event_id_submission_id_core_submission_event_id_id_fk": {
+          "name": "core_solve_event_id_submission_id_core_submission_event_id_id_fk",
+          "tableFrom": "core_solve",
+          "tableTo": "core_submission",
+          "columnsFrom": [
+            "event_id",
+            "submission_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "core_solve_event_id_solved_by_core_team_member_event_id_user_id_fk": {
+          "name": "core_solve_event_id_solved_by_core_team_member_event_id_user_id_fk",
+          "tableFrom": "core_solve",
+          "tableTo": "core_team_member",
+          "columnsFrom": [
+            "event_id",
+            "solved_by"
+          ],
+          "columnsTo": [
+            "event_id",
+            "user_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "core_solve_team_id_challenge_id_pk": {
+          "name": "core_solve_team_id_challenge_id_pk",
+          "columns": [
+            "team_id",
+            "challenge_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "core_solve_submission_id_unique": {
+          "name": "core_solve_submission_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "submission_id"
+          ]
+        },
+        "core_solve_challenge_order_uq": {
+          "name": "core_solve_challenge_order_uq",
+          "nullsNotDistinct": false,
+          "columns": [
+            "challenge_id",
+            "solve_order"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "core_solve_base_points_check": {
+          "name": "core_solve_base_points_check",
+          "value": "\"core_solve\".\"base_points\" > 0"
+        },
+        "core_solve_multiplier_check": {
+          "name": "core_solve_multiplier_check",
+          "value": "\"core_solve\".\"multiplier\" >= 0"
+        },
+        "core_solve_points_awarded_check": {
+          "name": "core_solve_points_awarded_check",
+          "value": "\"core_solve\".\"points_awarded\" >= 0"
+        },
+        "core_solve_order_check": {
+          "name": "core_solve_order_check",
+          "value": "\"core_solve\".\"solve_order\" IS NULL OR \"core_solve\".\"solve_order\" > 0"
+        },
+        "core_solve_revoked_reason_check": {
+          "name": "core_solve_revoked_reason_check",
+          "value": "\"core_solve\".\"revoked_at\" IS NULL OR \"core_solve\".\"revoked_reason\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.sz_path": {
+      "name": "sz_path",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "char(1)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delivers": {
+          "name": "delivers",
+          "type": "sz_fragment_key",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "intro_narration": {
+          "name": "intro_narration",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sz_path_event_id_core_event_id_fk": {
+          "name": "sz_path_event_id_core_event_id_fk",
+          "tableFrom": "sz_path",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_path_created_by_core_user_id_fk": {
+          "name": "sz_path_created_by_core_user_id_fk",
+          "tableFrom": "sz_path",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "sz_path_updated_by_core_user_id_fk": {
+          "name": "sz_path_updated_by_core_user_id_fk",
+          "tableFrom": "sz_path",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "updated_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "sz_path_event_id_code_unique": {
+          "name": "sz_path_event_id_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_id",
+            "code"
+          ]
+        },
+        "sz_path_id_event_id_unique": {
+          "name": "sz_path_id_event_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "event_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sz_path_challenge": {
+      "name": "sz_path_challenge",
+      "schema": "",
+      "columns": {
+        "challenge_id": {
+          "name": "challenge_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "path_id": {
+          "name": "path_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sequence": {
+          "name": "sequence",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tier": {
+          "name": "tier",
+          "type": "sz_tier",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pre_story": {
+          "name": "pre_story",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "post_story": {
+          "name": "post_story",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gm_note": {
+          "name": "gm_note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_path_final": {
+          "name": "is_path_final",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fragment_key": {
+          "name": "fragment_key",
+          "type": "sz_fragment_key",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sz_path_challenge_created_by_core_user_id_fk": {
+          "name": "sz_path_challenge_created_by_core_user_id_fk",
+          "tableFrom": "sz_path_challenge",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "sz_path_challenge_updated_by_core_user_id_fk": {
+          "name": "sz_path_challenge_updated_by_core_user_id_fk",
+          "tableFrom": "sz_path_challenge",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "updated_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "sz_path_challenge_event_id_core_event_id_fk": {
+          "name": "sz_path_challenge_event_id_core_event_id_fk",
+          "tableFrom": "sz_path_challenge",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_path_challenge_event_id_challenge_id_core_challenge_event_id_id_fk": {
+          "name": "sz_path_challenge_event_id_challenge_id_core_challenge_event_id_id_fk",
+          "tableFrom": "sz_path_challenge",
+          "tableTo": "core_challenge",
+          "columnsFrom": [
+            "event_id",
+            "challenge_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_path_challenge_event_id_path_id_sz_path_event_id_id_fk": {
+          "name": "sz_path_challenge_event_id_path_id_sz_path_event_id_id_fk",
+          "tableFrom": "sz_path_challenge",
+          "tableTo": "sz_path",
+          "columnsFrom": [
+            "event_id",
+            "path_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "sz_path_challenge_path_id_sequence_unique": {
+          "name": "sz_path_challenge_path_id_sequence_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "path_id",
+            "sequence"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "sz_path_challenge_sequence_check": {
+          "name": "sz_path_challenge_sequence_check",
+          "value": "\"sz_path_challenge\".\"sequence\" > 0"
+        },
+        "sz_path_challenge_fragment_final_check": {
+          "name": "sz_path_challenge_fragment_final_check",
+          "value": "\"sz_path_challenge\".\"fragment_key\" IS NULL OR \"sz_path_challenge\".\"is_path_final\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.sz_challenge_prereq": {
+      "name": "sz_challenge_prereq",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "challenge_id": {
+          "name": "challenge_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requires_id": {
+          "name": "requires_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "sz_challenge_prereq_requires_idx": {
+          "name": "sz_challenge_prereq_requires_idx",
+          "columns": [
+            {
+              "expression": "requires_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sz_challenge_prereq_created_by_core_user_id_fk": {
+          "name": "sz_challenge_prereq_created_by_core_user_id_fk",
+          "tableFrom": "sz_challenge_prereq",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "sz_challenge_prereq_updated_by_core_user_id_fk": {
+          "name": "sz_challenge_prereq_updated_by_core_user_id_fk",
+          "tableFrom": "sz_challenge_prereq",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "updated_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "sz_challenge_prereq_event_id_core_event_id_fk": {
+          "name": "sz_challenge_prereq_event_id_core_event_id_fk",
+          "tableFrom": "sz_challenge_prereq",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_challenge_prereq_event_id_challenge_id_core_challenge_event_id_id_fk": {
+          "name": "sz_challenge_prereq_event_id_challenge_id_core_challenge_event_id_id_fk",
+          "tableFrom": "sz_challenge_prereq",
+          "tableTo": "core_challenge",
+          "columnsFrom": [
+            "event_id",
+            "challenge_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_challenge_prereq_event_id_requires_id_core_challenge_event_id_id_fk": {
+          "name": "sz_challenge_prereq_event_id_requires_id_core_challenge_event_id_id_fk",
+          "tableFrom": "sz_challenge_prereq",
+          "tableTo": "core_challenge",
+          "columnsFrom": [
+            "event_id",
+            "requires_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "sz_challenge_prereq_challenge_id_requires_id_pk": {
+          "name": "sz_challenge_prereq_challenge_id_requires_id_pk",
+          "columns": [
+            "challenge_id",
+            "requires_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "sz_challenge_prereq_not_self": {
+          "name": "sz_challenge_prereq_not_self",
+          "value": "\"sz_challenge_prereq\".\"challenge_id\" <> \"sz_challenge_prereq\".\"requires_id\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.sz_team_path": {
+      "name": "sz_team_path",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "path_id": {
+          "name": "path_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entry_reason": {
+          "name": "entry_reason",
+          "type": "sz_path_entry_reason",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'initial'"
+        },
+        "reward_multiplier": {
+          "name": "reward_multiplier",
+          "type": "numeric(4, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'1.00'"
+        },
+        "skips_used": {
+          "name": "skips_used",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "entered_at": {
+          "name": "entered_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "left_at": {
+          "name": "left_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "sz_one_active_path": {
+          "name": "sz_one_active_path",
+          "columns": [
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"sz_team_path\".\"is_active\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "sz_team_path_event_path_idx": {
+          "name": "sz_team_path_event_path_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "path_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sz_team_path_event_id_core_event_id_fk": {
+          "name": "sz_team_path_event_id_core_event_id_fk",
+          "tableFrom": "sz_team_path",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_team_path_event_id_team_id_core_team_event_id_id_fk": {
+          "name": "sz_team_path_event_id_team_id_core_team_event_id_id_fk",
+          "tableFrom": "sz_team_path",
+          "tableTo": "core_team",
+          "columnsFrom": [
+            "event_id",
+            "team_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_team_path_event_id_path_id_sz_path_event_id_id_fk": {
+          "name": "sz_team_path_event_id_path_id_sz_path_event_id_id_fk",
+          "tableFrom": "sz_team_path",
+          "tableTo": "sz_path",
+          "columnsFrom": [
+            "event_id",
+            "path_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "sz_team_path_id_event_id_team_id_unique": {
+          "name": "sz_team_path_id_event_id_team_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id",
+            "event_id",
+            "team_id"
+          ]
+        },
+        "sz_team_path_team_id_path_id_unique": {
+          "name": "sz_team_path_team_id_path_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "team_id",
+            "path_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "sz_team_path_multiplier_check": {
+          "name": "sz_team_path_multiplier_check",
+          "value": "\"sz_team_path\".\"reward_multiplier\" > 0 AND \"sz_team_path\".\"reward_multiplier\" <= 1"
+        },
+        "sz_team_path_skips_used_check": {
+          "name": "sz_team_path_skips_used_check",
+          "value": "\"sz_team_path\".\"skips_used\" >= 0"
+        },
+        "sz_team_path_active_state_check": {
+          "name": "sz_team_path_active_state_check",
+          "value": "\"sz_team_path\".\"is_active\" = (\"sz_team_path\".\"left_at\" IS NULL)"
+        },
+        "sz_team_path_left_after_entered_check": {
+          "name": "sz_team_path_left_after_entered_check",
+          "value": "\"sz_team_path\".\"left_at\" IS NULL OR \"sz_team_path\".\"left_at\" >= \"sz_team_path\".\"entered_at\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.sz_unlocked_challenge": {
+      "name": "sz_unlocked_challenge",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "challenge_id": {
+          "name": "challenge_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "sz_unlock_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unlocked_at": {
+          "name": "unlocked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "sz_unlocked_challenge_event_team_idx": {
+          "name": "sz_unlocked_challenge_event_team_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "team_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sz_unlocked_challenge_event_id_core_event_id_fk": {
+          "name": "sz_unlocked_challenge_event_id_core_event_id_fk",
+          "tableFrom": "sz_unlocked_challenge",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_unlocked_challenge_event_id_team_id_core_team_event_id_id_fk": {
+          "name": "sz_unlocked_challenge_event_id_team_id_core_team_event_id_id_fk",
+          "tableFrom": "sz_unlocked_challenge",
+          "tableTo": "core_team",
+          "columnsFrom": [
+            "event_id",
+            "team_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_unlocked_challenge_event_id_challenge_id_core_challenge_event_id_id_fk": {
+          "name": "sz_unlocked_challenge_event_id_challenge_id_core_challenge_event_id_id_fk",
+          "tableFrom": "sz_unlocked_challenge",
+          "tableTo": "core_challenge",
+          "columnsFrom": [
+            "event_id",
+            "challenge_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "sz_unlocked_challenge_team_id_challenge_id_pk": {
+          "name": "sz_unlocked_challenge_team_id_challenge_id_pk",
+          "columns": [
+            "team_id",
+            "challenge_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sz_skip": {
+      "name": "sz_skip",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "challenge_id": {
+          "name": "challenge_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "team_path_id": {
+          "name": "team_path_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "used_by": {
+          "name": "used_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "used_at": {
+          "name": "used_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "sz_skip_team_path_idx": {
+          "name": "sz_skip_team_path_idx",
+          "columns": [
+            {
+              "expression": "team_path_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sz_skip_event_id_core_event_id_fk": {
+          "name": "sz_skip_event_id_core_event_id_fk",
+          "tableFrom": "sz_skip",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_skip_event_id_team_id_core_team_event_id_id_fk": {
+          "name": "sz_skip_event_id_team_id_core_team_event_id_id_fk",
+          "tableFrom": "sz_skip",
+          "tableTo": "core_team",
+          "columnsFrom": [
+            "event_id",
+            "team_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_skip_event_id_challenge_id_core_challenge_event_id_id_fk": {
+          "name": "sz_skip_event_id_challenge_id_core_challenge_event_id_id_fk",
+          "tableFrom": "sz_skip",
+          "tableTo": "core_challenge",
+          "columnsFrom": [
+            "event_id",
+            "challenge_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_skip_event_id_team_path_id_team_id_sz_team_path_event_id_id_team_id_fk": {
+          "name": "sz_skip_event_id_team_path_id_team_id_sz_team_path_event_id_id_team_id_fk",
+          "tableFrom": "sz_skip",
+          "tableTo": "sz_team_path",
+          "columnsFrom": [
+            "event_id",
+            "team_path_id",
+            "team_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id",
+            "team_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_skip_event_id_used_by_core_team_member_event_id_user_id_fk": {
+          "name": "sz_skip_event_id_used_by_core_team_member_event_id_user_id_fk",
+          "tableFrom": "sz_skip",
+          "tableTo": "core_team_member",
+          "columnsFrom": [
+            "event_id",
+            "used_by"
+          ],
+          "columnsTo": [
+            "event_id",
+            "user_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "sz_skip_team_id_challenge_id_pk": {
+          "name": "sz_skip_team_id_challenge_id_pk",
+          "columns": [
+            "team_id",
+            "challenge_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sz_time_glitch": {
+      "name": "sz_time_glitch",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "announced": {
+          "name": "announced",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sz_time_glitch_event_id_core_event_id_fk": {
+          "name": "sz_time_glitch_event_id_core_event_id_fk",
+          "tableFrom": "sz_time_glitch",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_time_glitch_created_by_core_user_id_fk": {
+          "name": "sz_time_glitch_created_by_core_user_id_fk",
+          "tableFrom": "sz_time_glitch",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "sz_time_glitch_updated_by_core_user_id_fk": {
+          "name": "sz_time_glitch_updated_by_core_user_id_fk",
+          "tableFrom": "sz_time_glitch",
+          "tableTo": "core_user",
+          "columnsFrom": [
+            "updated_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "sz_time_glitch_ends_after_starts": {
+          "name": "sz_time_glitch_ends_after_starts",
+          "value": "\"sz_time_glitch\".\"ends_at\" > \"sz_time_glitch\".\"starts_at\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.sz_convergence_fragment": {
+      "name": "sz_convergence_fragment",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fragment_key": {
+          "name": "fragment_key",
+          "type": "sz_fragment_key",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "challenge_id": {
+          "name": "challenge_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acquired_at": {
+          "name": "acquired_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sz_convergence_fragment_event_id_core_event_id_fk": {
+          "name": "sz_convergence_fragment_event_id_core_event_id_fk",
+          "tableFrom": "sz_convergence_fragment",
+          "tableTo": "core_event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_convergence_fragment_event_id_team_id_core_team_event_id_id_fk": {
+          "name": "sz_convergence_fragment_event_id_team_id_core_team_event_id_id_fk",
+          "tableFrom": "sz_convergence_fragment",
+          "tableTo": "core_team",
+          "columnsFrom": [
+            "event_id",
+            "team_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sz_convergence_fragment_event_id_challenge_id_core_challenge_event_id_id_fk": {
+          "name": "sz_convergence_fragment_event_id_challenge_id_core_challenge_event_id_id_fk",
+          "tableFrom": "sz_convergence_fragment",
+          "tableTo": "core_challenge",
+          "columnsFrom": [
+            "event_id",
+            "challenge_id"
+          ],
+          "columnsTo": [
+            "event_id",
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "sz_convergence_fragment_team_id_fragment_key_pk": {
+          "name": "sz_convergence_fragment_team_id_fragment_key_pk",
+          "columns": [
+            "team_id",
+            "fragment_key"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.challenge_difficulty": {
+      "name": "challenge_difficulty",
+      "schema": "public",
+      "values": [
+        "easy",
+        "medium",
+        "hard",
+        "expert"
+      ]
+    },
+    "public.challenge_state": {
+      "name": "challenge_state",
+      "schema": "public",
+      "values": [
+        "hidden",
+        "visible",
+        "locked"
+      ]
+    },
+    "public.decay_type": {
+      "name": "decay_type",
+      "schema": "public",
+      "values": [
+        "logarithmic",
+        "linear",
+        "static"
+      ]
+    },
+    "public.submission_verdict": {
+      "name": "submission_verdict",
+      "schema": "public",
+      "values": [
+        "correct",
+        "incorrect",
+        "duplicate",
+        "rate_limited"
+      ]
+    },
+    "public.sz_fragment_key": {
+      "name": "sz_fragment_key",
+      "schema": "public",
+      "values": [
+        "who",
+        "how",
+        "why"
+      ]
+    },
+    "public.sz_path_entry_reason": {
+      "name": "sz_path_entry_reason",
+      "schema": "public",
+      "values": [
+        "initial",
+        "free_switch",
+        "penalized_switch"
+      ]
+    },
+    "public.sz_tier": {
+      "name": "sz_tier",
+      "schema": "public",
+      "values": [
+        "past",
+        "present",
+        "future"
+      ]
+    },
+    "public.sz_unlock_source": {
+      "name": "sz_unlock_source",
+      "schema": "public",
+      "values": [
+        "initial",
+        "solve",
+        "skip",
+        "prereq",
+        "admin"
+      ]
+    },
+    "public.team_role": {
+      "name": "team_role",
+      "schema": "public",
+      "values": [
+        "captain",
+        "member"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {
+    "public.core_challenge_solve_count": {
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "challenge_id": {
+          "name": "challenge_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "solves": {
+          "name": "solves",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "definition": "\n  SELECT\n      c.event_id,\n      c.id AS challenge_id,\n      count(s.team_id) AS solves\n  FROM core_challenge c\n  LEFT JOIN core_solve s\n      ON s.challenge_id = c.id\n     AND s.revoked_at IS NULL\n  GROUP BY c.event_id, c.id\n",
+      "name": "core_challenge_solve_count",
+      "schema": "public",
+      "isExisting": false,
+      "materialized": false
+    },
+    "public.core_leaderboard": {
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_solo": {
+          "name": "is_solo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "score": {
+          "name": "score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "solve_count": {
+          "name": "solve_count",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_solve_at": {
+          "name": "last_solve_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rank": {
+          "name": "rank",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "definition": "\n  SELECT\n      t.event_id,\n      t.id AS team_id,\n      t.name AS display_name,\n      t.is_solo,\n      coalesce(sv.total, 0) - coalesce(h.spent, 0) AS score,\n      coalesce(sv.solve_count, 0) AS solve_count,\n      sv.last_solve_at,\n      rank() OVER (\n          PARTITION BY t.event_id\n          ORDER BY coalesce(sv.total, 0) - coalesce(h.spent, 0) DESC,\n                   sv.last_solve_at ASC NULLS LAST\n      ) AS rank\n  FROM core_team t\n  LEFT JOIN (\n      SELECT s.event_id,\n             s.team_id,\n             sum(s.points_awarded) AS total,\n             count(*) AS solve_count,\n             max(s.solved_at) AS last_solve_at\n      FROM core_solve s\n      WHERE s.revoked_at IS NULL\n      GROUP BY s.event_id, s.team_id\n  ) sv ON sv.event_id = t.event_id AND sv.team_id = t.id\n  LEFT JOIN (\n      SELECT hu.event_id,\n             hu.team_id,\n             sum(hu.cost_paid) AS spent\n      FROM core_hint_unlock hu\n      GROUP BY hu.event_id, hu.team_id\n  ) h ON h.event_id = t.event_id AND h.team_id = t.id\n  WHERE t.is_hidden = FALSE\n    AND t.disqualified_at IS NULL\n",
+      "name": "core_leaderboard",
+      "schema": "public",
+      "isExisting": false,
+      "materialized": false
+    }
+  },
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
