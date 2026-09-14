@@ -4,6 +4,7 @@ import { eventRoutes, adminEventRoutes } from "@/routes/events/event.routes";
 import { teamRoutes } from "@/routes/teams/team.routes";
 import { leaderboardRoutes } from "@/routes/leaderboard/leaderboard.routes";
 import { categoryRoutes, adminCategoryRoutes } from "@/routes/categories/category.routes";
+import { challengeRoutes, adminChallengeRoutes } from "@/routes/challenges/challenge.routes";
 
 export const router = new Elysia()
   .use(authRoutes)
@@ -13,4 +14,5 @@ export const router = new Elysia()
   .use(leaderboardRoutes)
   .use(categoryRoutes)
   .use(adminCategoryRoutes)
-
+  .use(challengeRoutes)
+  .use(adminChallengeRoutes);
