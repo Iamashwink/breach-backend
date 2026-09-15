@@ -1,0 +1,75 @@
+import { and, eq, lte, sql } from "drizzle-orm";
+import { db } from "@/db/client";
+import { coreLeaderboard } from "@/models/core/views";
+import { coreHintUnlock } from "@/models/core/hint-unlock";
+import { coreSolve } from "@/models/core/solve";
+import { coreTeam } from "@/models/core/team";
+
+export async function getLiveLeaderboard(eventId: string) {
+  return db
+    .select()
+    .from(coreLeaderboard)
+    .where(eq(coreLeaderboard.eventId, eventId))
+    .orderBy(coreLeaderboard.rank);
+}
+
+export async function getFrozenLeaderboard(eventId: string, frozenAt: Date) {
+  const solves = db
+    .select({
+      teamId: coreSolve.teamId,
+      total: sql<number>`sum(${coreSolve.pointsAwarded})`.as("total"),
+      solveCount: sql<number>`count(*)`.as("solve_count"),
+      lastSolveAt: sql<Date>`max(${coreSolve.solvedAt})`.as("last_solve_at"),
+    })
+    .from(coreSolve)
+    .where(
+      and(
+        eq(coreSolve.eventId, eventId),
+        lte(coreSolve.solvedAt, frozenAt),
+        sql`${coreSolve.revokedAt} IS NULL`,
+      ),
+    )
+    .groupBy(coreSolve.teamId)
+    .as("sv");
+
+  const hints = db
+    .select({
+      teamId: coreHintUnlock.teamId,
+      spent: sql<number>`sum(${coreHintUnlock.costPaid})`.as("spent"),
+    })
+    .from(coreHintUnlock)
+    .where(
+      and(
+        eq(coreHintUnlock.eventId, eventId),
+        lte(coreHintUnlock.unlockedAt, frozenAt),
+      ),
+    )
+    .groupBy(coreHintUnlock.teamId)
+    .as("h");
+
+  const rows = await db
+    .select({
+      teamId: coreTeam.id,
+      displayName: coreTeam.name,
+      isSolo: coreTeam.isSolo,
+      score: sql<number>`coalesce(${solves.total}, 0) - coalesce(${hints.spent}, 0)`,
+      solveCount: sql<number>`coalesce(${solves.solveCount}, 0)`,
+      lastSolveAt: solves.lastSolveAt,
+    })
+    .from(coreTeam)
+    .leftJoin(solves, eq(solves.teamId, coreTeam.id))
+    .leftJoin(hints, eq(hints.teamId, coreTeam.id))
+    .where(
+      and(
+        eq(coreTeam.eventId, eventId),
+        sql`${coreTeam.isHidden} = FALSE`,
+        sql`${coreTeam.disqualifiedAt} IS NULL`,
+      ),
+    )
+    .orderBy(
+      sql`coalesce(${solves.total}, 0) - coalesce(${hints.spent}, 0) DESC`,
+      sql`max(${coreSolve.solvedAt}) ASC NULLS LAST`,
+    );
+
+  return rows.map((row, i) => ({ ...row, rank: i + 1 }));
+}
