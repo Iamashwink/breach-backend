@@ -96,3 +96,20 @@ export async function createSolve(
   const rows = await executor.insert(coreSolve).values(data).returning();
   return rows[0]!;
 }
+
+/**
+ * Live solve counts for every challenge in an event, in one query.
+ *
+ * The board prices every challenge it shows, and doing that with one
+ * `getChallengeSolveCount` per challenge is a round trip per node on a page
+ * that is already re-read every twenty seconds by every team.
+ */
+export async function findSolveCountsByEvent(eventId: string, executor: Executor = db) {
+  const rows = await executor
+    .select({ challengeId: coreSolve.challengeId, solves: count() })
+    .from(coreSolve)
+    .where(and(eq(coreSolve.eventId, eventId), sql`${coreSolve.revokedAt} IS NULL`))
+    .groupBy(coreSolve.challengeId);
+
+  return new Map(rows.map((r) => [r.challengeId, Number(r.solves)]));
+}

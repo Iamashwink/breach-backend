@@ -21,30 +21,10 @@ import { findActiveGlitch } from "@/repositories/sz-time-glitch.repository";
 import { createFragment } from "@/repositories/sz-fragment.repository";
 import { FULL_MULTIPLIER } from "@/services/signal-zero/config";
 import { syncUnlocks } from "@/services/signal-zero/reveal.service";
+import { calculatePoints } from "@/services/challenges/scoring";
 
 function hashFlag(flag: string): string {
   return createHash("sha256").update(flag.trim()).digest("hex");
-}
-
-function calculatePoints(
-  initialPoints: number,
-  minPoints: number,
-  decayThreshold: number,
-  decayType: "logarithmic" | "linear" | "static",
-  solveCount: number,
-): number {
-  if (decayType === "static") return initialPoints;
-  if (solveCount === 0) return initialPoints;
-  if (solveCount >= decayThreshold) return minPoints;
-
-  let ratio: number;
-  if (decayType === "logarithmic") {
-    ratio = Math.log(solveCount + 1) / Math.log(decayThreshold + 1);
-  } else {
-    ratio = solveCount / decayThreshold;
-  }
-
-  return Math.max(minPoints, Math.round(initialPoints - (initialPoints - minPoints) * ratio));
 }
 
 export async function submitFlag(
@@ -143,13 +123,7 @@ export async function submitFlag(
     // value for anyone who lands it inside the window, permanently.
     const basePoints = glitch
       ? challenge.initialPoints
-      : calculatePoints(
-          challenge.initialPoints,
-          challenge.minPoints,
-          challenge.decayThreshold,
-          challenge.decayType,
-          solveCount,
-        );
+      : calculatePoints(challenge, solveCount);
     const pointsAwarded = Math.round(basePoints * Number(multiplier));
 
     const submission = await createSubmission(
