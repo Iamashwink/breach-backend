@@ -10,7 +10,13 @@ import { logger } from "@/loggers/logger";
  */
 export async function init(): Promise<void> {
   loadEnvVariables();
-  // await migrate(db, { migrationsFolder: "./src/db/migrations" });
   await connectToDB();
+
+  // Applies anything in meta/_journal.json that this database has not seen.
+  // Runs after the connectivity check so a bad DATABASE_URL fails with
+  // "Failed to connect" rather than a migration stack trace.
+  await migrate(db, { migrationsFolder: "./src/db/migrations" });
+  logger.info("Migrations up to date");
+
   logger.info("Initialization complete");
 }
