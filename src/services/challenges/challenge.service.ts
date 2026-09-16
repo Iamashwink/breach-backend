@@ -1,8 +1,11 @@
 import { createHash } from "crypto";
 import { ConflictError, NotFoundError, ValidationError } from "@/errors/error-types";
 import { findEventById } from "@/repositories/event.repository";
+import { ensureCanScore } from "@/services/events/event-guard";
 import { findCategoryById } from "@/repositories/category.repository";
 import { findUserTeamMembership } from "@/repositories/team.repository";
+import { findPathsByEvent } from "@/repositories/sz-path.repository";
+import { isChallengeUnlocked } from "@/repositories/sz-reveal.repository";
 import {
   createChallenge,
   createHint,
@@ -164,8 +167,21 @@ export async function listHintsForPlayer(challengeId: string, eventId: string, u
 }
 
 export async function unlockHint(hintId: string, challengeId: string, eventId: string, userId: string) {
-  await ensureChallengeExists(challengeId, eventId);
-  const membership = await ensureTeamMembership(userId, eventId);
+  const challenge = await ensureChallengeExists(challengeId, eventId);
+  // Unlocking spends points, so it is gated like a submission — not merely by
+  // team membership the way reading the hint list is.
+  const membership = await ensureCanScore(userId, eventId, "unlock hints");
+
+  // Same visibility rules as submitting. Without these a player who guesses a
+  // challenge id can buy hints for a challenge their reveal window has not
+  // reached, and confirm it exists along with its hint structure.
+  if (challenge.state !== "visible") throw new NotFoundError("Challenge not found");
+
+  const paths = await findPathsByEvent(eventId);
+  if (paths.length > 0) {
+    const unlocked = await isChallengeUnlocked(membership.teamId, challengeId);
+    if (!unlocked) throw new ValidationError("That challenge is not open to your team yet");
+  }
 
   const hint = await findHintById(hintId, eventId);
   if (!hint || hint.challengeId !== challengeId) throw new NotFoundError("Hint not found");
