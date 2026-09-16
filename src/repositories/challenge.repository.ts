@@ -1,25 +1,86 @@
-import { and, eq, inArray } from "drizzle-orm";
-import { db } from "@/db/client";
+import { and, asc, eq } from "drizzle-orm";
+import { db, type Executor } from "@/db/client";
 import { coreChallenge } from "@/models/core/challenge";
 import { coreHint } from "@/models/core/hint";
 import { coreHintUnlock } from "@/models/core/hint-unlock";
 
-export async function findChallengesByEvent(eventId: string) {
-  return db.select().from(coreChallenge).where(eq(coreChallenge.eventId, eventId));
-}
+/**
+ * Every column a player may see. `flagHash` is deliberately absent: the hashes
+ * are unsalted sha256 of the flag text, so handing one to a player is handing
+ * them an offline-crackable copy of the flag. Anything player-facing selects
+ * this set rather than `select()`.
+ */
+const playerChallengeColumns = {
+  id: coreChallenge.id,
+  eventId: coreChallenge.eventId,
+  title: coreChallenge.title,
+  description: coreChallenge.description,
+  categoryId: coreChallenge.categoryId,
+  difficulty: coreChallenge.difficulty,
+  initialPoints: coreChallenge.initialPoints,
+  minPoints: coreChallenge.minPoints,
+  decayThreshold: coreChallenge.decayThreshold,
+  decayType: coreChallenge.decayType,
+  state: coreChallenge.state,
+  maxAttempts: coreChallenge.maxAttempts,
+  author: coreChallenge.author,
+  createdAt: coreChallenge.createdAt,
+  updatedAt: coreChallenge.updatedAt,
+};
 
-export async function findVisibleChallengesByEvent(eventId: string) {
-  return db
+/**
+ * Ordered so that callers which take "the first matching row" — notably
+ * `findWelcomeChallenge` — are deterministic. Postgres gives no order
+ * guarantee without an ORDER BY, so without this the welcome challenge could
+ * differ between two calls in the same request.
+ */
+export async function findChallengesByEvent(eventId: string, executor: Executor = db) {
+  return executor
     .select()
     .from(coreChallenge)
-    .where(and(eq(coreChallenge.eventId, eventId), eq(coreChallenge.state, "visible")));
+    .where(eq(coreChallenge.eventId, eventId))
+    .orderBy(asc(coreChallenge.createdAt), asc(coreChallenge.id));
 }
 
-export async function findChallengeById(challengeId: string, eventId: string) {
-  const rows = await db
+export async function findVisibleChallengesByEvent(eventId: string, executor: Executor = db) {
+  return executor
+    .select(playerChallengeColumns)
+    .from(coreChallenge)
+    .where(and(eq(coreChallenge.eventId, eventId), eq(coreChallenge.state, "visible")))
+    .orderBy(asc(coreChallenge.createdAt), asc(coreChallenge.id));
+}
+
+export async function findChallengeById(
+  challengeId: string,
+  eventId: string,
+  executor: Executor = db,
+) {
+  const rows = await executor
     .select()
     .from(coreChallenge)
     .where(and(eq(coreChallenge.id, challengeId), eq(coreChallenge.eventId, eventId)));
+  return rows[0] ?? null;
+}
+
+/**
+ * The challenge row, locked for the rest of the caller's transaction.
+ *
+ * Dynamic scoring and first-blood ordering both answer "how many solves does
+ * this challenge have", read it, and then write a row keyed on the answer.
+ * Without this lock two teams solving at the same instant read the same count,
+ * compute the same `solve_order`, and the second INSERT dies on
+ * `core_solve_challenge_order_uq` — taking its submission row down with it.
+ */
+export async function lockChallengeForUpdate(
+  challengeId: string,
+  eventId: string,
+  executor: Executor = db,
+) {
+  const rows = await executor
+    .select()
+    .from(coreChallenge)
+    .where(and(eq(coreChallenge.id, challengeId), eq(coreChallenge.eventId, eventId)))
+    .for("update");
   return rows[0] ?? null;
 }
 
@@ -69,8 +130,8 @@ export async function updateChallenge(
   return rows[0] ?? null;
 }
 
-export async function findHintsByChallenge(challengeId: string) {
-  return db
+export async function findHintsByChallenge(challengeId: string, executor: Executor = db) {
+  return executor
     .select()
     .from(coreHint)
     .where(eq(coreHint.challengeId, challengeId))
