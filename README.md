@@ -94,11 +94,63 @@ leaderboard is a separate, time-bounded query against `core_solve`, not a mode
 of this view.
 
 
+## Round 1 — Signal Zero
+
+The module lives in `src/services/signal-zero/` and is inert unless the event
+has `sz_path` rows: an event with no paths is a plain CTF and every visible
+challenge is open, which is what keeps the reveal rules out of core.
+
+| Rule | Where |
+| --- | --- |
+| Reveal window — 2 revealed, then always 3 exposed | `reveal.service.ts` (`syncUnlocks`) |
+| Path selection and switching (8 solves = free switch) | `path.service.ts` |
+| Skips (quota 4 per team per event, drops the path to 0.80) | `skip.service.ts` |
+| Time Glitch windows and the scoring override | `time-glitch.service.ts` |
+| Fragments and the convergence gate | `submission.service.ts` + `sz_challenge_prereq` |
+| The event page in one call | `board.service.ts` |
+| Narration, flags and points, transcribed from the docs | `content.ts` |
+
+`syncUnlocks` is written as a *target* state rather than an incremental
+"unlock one more": recomputing it can only add rows a correct history would
+already have produced, so it is safe to call after any change and is what
+repairs a team whose window was left short. It runs on team creation, path
+selection, every solve, every skip, and on every board read.
+
+### Seeding
+
+```bash
+bun run db:seed        # 32 challenges, 3 paths, 30 story rows, 5 prereq rows
+```
+
+Idempotent by content — re-running updates challenges and narration in place
+and never touches team state, so a typo fix mid-event is a re-run. Challenges
+seed `hidden`; publishing the event and making them visible stays a deliberate
+admin action.
+
+**Before the event runs**, confirm the two placeholder flags in `content.ts`
+(`SEED_WELCOME` and `SEED_CONVERGENCE`) with the content team — the narration
+document does not specify either. C8 ships as one combined flag per decision C6.
+
+### Player routes
+
+```
+GET  /events/:eventId/board              the event page: path, exposed challenges, skips, glitch
+GET  /events/:eventId/paths              paths + intro narration + what's available
+POST /events/:eventId/paths/select       pick a path (requires the welcome solve)
+POST /events/:eventId/paths/switch       free at 8+ solves, else 0.80 on the new path
+POST /events/:eventId/skips              spend a skip
+GET  /events/:eventId/time-glitch        is decay suspended right now
+```
+
+Admin: `GET|POST /admin/events/:eventId/time-glitches`,
+`POST .../generate` (hourly schedule), `DELETE .../:glitchId`.
+
 ## Scripts
 
 - `bun run dev` — start the dev server with hot reload
 - `bun run db:generate` — generate a Drizzle migration from `src/models`
 - `bun run db:migrate` — apply migrations manually; application startup also applies pending migrations
+- `bun run db:seed` — load Signal Zero content
 - `bun run db:studio` — open Drizzle Studio
 
 ## Docker

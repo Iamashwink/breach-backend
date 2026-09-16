@@ -68,7 +68,9 @@ export async function getFrozenLeaderboard(eventId: string, frozenAt: Date) {
     )
     .orderBy(
       sql`coalesce(${solves.total}, 0) - coalesce(${hints.spent}, 0) DESC`,
-      sql`max(${coreSolve.solvedAt}) ASC NULLS LAST`,
+      // Ties break on the earliest last-solve, read from the subquery. Calling
+      // max() here instead would be an aggregate in a non-grouped query.
+      sql`${solves.lastSolveAt} ASC NULLS LAST`,
     );
 
   return rows.map((row, i) => ({ ...row, rank: i + 1 }));

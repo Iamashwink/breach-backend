@@ -5,6 +5,7 @@ import { teamRoutes } from "@/routes/teams/team.routes";
 import { leaderboardRoutes } from "@/routes/leaderboard/leaderboard.routes";
 import { categoryRoutes, adminCategoryRoutes } from "@/routes/categories/category.routes";
 import { challengeRoutes, adminChallengeRoutes } from "@/routes/challenges/challenge.routes";
+import { signalZeroRoutes, adminSignalZeroRoutes } from "@/routes/signal-zero/signal-zero.routes";
 
 export const router = new Elysia()
   .use(authRoutes)
@@ -15,4 +16,6 @@ export const router = new Elysia()
   .use(categoryRoutes)
   .use(adminCategoryRoutes)
   .use(challengeRoutes)
-  .use(adminChallengeRoutes);
+  .use(adminChallengeRoutes)
+  .use(signalZeroRoutes)
+  .use(adminSignalZeroRoutes);
