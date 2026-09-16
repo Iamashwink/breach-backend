@@ -75,3 +75,30 @@ export async function getFrozenLeaderboard(eventId: string, frozenAt: Date) {
 
   return rows.map((row, i) => ({ ...row, rank: i + 1 }));
 }
+
+/**
+ * One team's row from the live board — score, solve count and rank.
+ *
+ * Read from the same view the scoreboard uses so the number in the player's
+ * HUD and the number next to their name on the board can never disagree. The
+ * view already nets hint spend out of the score, so callers must not subtract
+ * it a second time.
+ *
+ * Returns null for a hidden or disqualified team: the view excludes them, and
+ * a HUD that quietly showed a stale score would be worse than an absent one.
+ */
+export async function getTeamStanding(eventId: string, teamId: string) {
+  const rows = await db
+    .select()
+    .from(coreLeaderboard)
+    .where(and(eq(coreLeaderboard.eventId, eventId), eq(coreLeaderboard.teamId, teamId)));
+
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    score: Number(row.score ?? 0),
+    solveCount: Number(row.solveCount ?? 0),
+    rank: Number(row.rank ?? 0),
+    lastSolveAt: row.lastSolveAt,
+  };
+}

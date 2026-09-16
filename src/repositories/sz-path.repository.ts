@@ -165,3 +165,45 @@ export async function findSolvedChallengeIds(
     );
   return rows.map((r) => r.challengeId);
 }
+
+/**
+ * Points this team has banked, broken down by path code.
+ *
+ * Read from `core_solve` joined through `sz_path_challenge` rather than from
+ * the team's current attempt, because points earned in a path the team has
+ * since left still belong to that path — leaving an attempt closes it, it does
+ * not un-earn its solves.
+ *
+ * Pathless challenges (welcome, convergence) carry no code and are returned
+ * under the `null` key so the caller can add them to the total without
+ * attributing them to A, B or C.
+ */
+export async function findTeamPathScores(
+  teamId: string,
+  eventId: string,
+  executor: Executor = db,
+) {
+  const rows = await executor
+    .select({
+      code: szPath.code,
+      points: sql<number>`coalesce(sum(${coreSolve.pointsAwarded}), 0)`,
+      solves: count(coreSolve.challengeId),
+    })
+    .from(coreSolve)
+    .leftJoin(szPathChallenge, eq(szPathChallenge.challengeId, coreSolve.challengeId))
+    .leftJoin(szPath, eq(szPath.id, szPathChallenge.pathId))
+    .where(
+      and(
+        eq(coreSolve.teamId, teamId),
+        eq(coreSolve.eventId, eventId),
+        isNull(coreSolve.revokedAt),
+      ),
+    )
+    .groupBy(szPath.code);
+
+  return rows.map((r) => ({
+    code: r.code,
+    points: Number(r.points),
+    solves: Number(r.solves),
+  }));
+}
