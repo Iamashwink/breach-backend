@@ -22,8 +22,8 @@ export async function patch(
   body: {
     name?: string;
     description?: string;
-    startsAt?: string;
-    endsAt?: string;
+    startsAt?: string | null;
+    endsAt?: string | null;
     isPublished?: boolean;
     isFrozen?: boolean;
   },

@@ -38,8 +38,10 @@ export async function updateEvent(
     name: string;
     slug: string;
     description: string;
-    startsAt: Date;
-    endsAt: Date;
+    // Nullable: an explicit null clears the date, which is how a published
+    // event is taken back to draft.
+    startsAt: Date | null;
+    endsAt: Date | null;
     isPublished: boolean;
     isFrozen: boolean;
     frozenAt: Date | null;
