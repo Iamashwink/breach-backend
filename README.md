@@ -124,8 +124,29 @@ bun run db:seed        # 32 challenges, 3 paths, 30 story rows, 5 prereq rows
 
 Idempotent by content — re-running updates challenges and narration in place
 and never touches team state, so a typo fix mid-event is a re-run. Challenges
-seed `hidden`; publishing the event and making them visible stays a deliberate
-admin action.
+seed `hidden`; opening them is the deliberate second step:
+
+```bash
+bun run db:publish                 # opens now, runs 8 hours
+bun run db:publish -- --hours 48
+bun run db:publish -- --close      # unpublish and re-hide
+```
+
+`db:publish` only moves challenges `hidden -> visible`; one an admin has pulled
+back to `locked` is left alone, so re-publishing never undoes that.
+
+### The first admin
+
+`/auth/signup` always creates a non-admin — an event where anyone can register
+themselves as an admin has no admin routes worth guarding. So the first admin
+comes from someone with database access:
+
+```bash
+bun run db:admin -- --email ops@axios.net --username ops --password '...'
+bun run db:admin -- --email existing@user    # promote someone already registered
+```
+
+Without one, the Time Glitch and challenge-management routes are unreachable.
 
 **Before the event runs**, confirm the two placeholder flags in `content.ts`
 (`SEED_WELCOME` and `SEED_CONVERGENCE`) with the content team — the narration
@@ -134,13 +155,36 @@ document does not specify either. C8 ships as one combined flag per decision C6.
 ### Player routes
 
 ```
-GET  /events/:eventId/board              the event page: path, exposed challenges, skips, glitch
+GET  /events/:eventId/board              the event page, in one call (see below)
 GET  /events/:eventId/paths              paths + intro narration + what's available
 POST /events/:eventId/paths/select       pick a path (requires the welcome solve)
 POST /events/:eventId/paths/switch       free at 8+ solves, else 0.80 on the new path
 POST /events/:eventId/skips              spend a skip
 GET  /events/:eventId/time-glitch        is decay suspended right now
 ```
+
+`/board` is what the client renders a whole session from, and it is deliberately
+wide so a player page is one request rather than six:
+
+| Field | What it answers |
+| --- | --- |
+| `team`, `score`, `rank`, `solveCount` | the HUD — `score` comes straight off `core_leaderboard`, hint spend already netted out, so the HUD and the scoreboard can never disagree |
+| `pathScores` | points per path code, plus `standalone` for the pathless ones |
+| `paths` | all three: progress, points, whether active / attempted / available |
+| `path` | the active attempt, with its reward multiplier |
+| `challenges` | the active path's reveal window, with `preStory`; `postStory` is withheld until solved |
+| `history` | what the team closed on *every* path, by sequence — so a chart still shows work done on a path the team has left |
+| `standalone` | the welcome gate and, once three fragments are held, the convergence final; `isFinal` tells them apart |
+| `skips`, `fragments`, `timeGlitch` | quota, what's been earned, whether decay is suspended |
+
+Each challenge carries both `initialPoints` (the headline) and `currentPoints`
+(what a solve pays right now, decay applied). Both come from
+`services/challenges/scoring.ts`, which `submission.service` also prices solves
+with — a board that quoted one number while the submission paid another would
+look like the server cheating.
+
+Client-side derivation of any of this is a bug: points decay, reveals and the
+welcome gate are all server rules, and a client that recomputes them will drift.
 
 Admin: `GET|POST /admin/events/:eventId/time-glitches`,
 `POST .../generate` (hourly schedule), `DELETE .../:glitchId`.
@@ -151,6 +195,8 @@ Admin: `GET|POST /admin/events/:eventId/time-glitches`,
 - `bun run db:generate` — generate a Drizzle migration from `src/models`
 - `bun run db:migrate` — apply migrations manually; application startup also applies pending migrations
 - `bun run db:seed` — load Signal Zero content
+- `bun run db:publish` — open the event for play (or `-- --close` to shut it)
+- `bun run db:admin` — create or promote an admin
 - `bun run db:studio` — open Drizzle Studio
 
 ## Docker
@@ -159,3 +205,18 @@ Admin: `GET|POST /admin/events/:eventId/time-glitches`,
 docker compose up -d postgres   # Postgres only, for local dev
 docker compose up --build       # full stack (app + Postgres)
 ```
+
+### The event window
+
+`ensureCanScore` refuses every point-changing action outside `starts_at`/
+`ends_at`, and `/board` with it. Team formation and the scoreboard stay open on
+both sides of the window, which is what lets the client show a lobby before the
+gun and final standings after the close instead of an error.
+
+## The frontend
+
+[`breachpoint-frontend`](../breachpoint-frontend) is the player client. It holds
+no game rules: flags, point values, reveals, skip legality and path entry are
+all decided here and rendered there. `FRONTEND_URL` accepts a comma-separated
+list of origins so a dev server, a preview build and a deployment can share one
+backend.
