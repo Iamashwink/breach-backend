@@ -10,7 +10,7 @@ await init();
 
 const app = new Elysia()
   .use(errorHandler)
-  // Auth is a Bearer header, not a cookie, so credentials are not needed —
+  // Auth is a Bearer header, not a cookie, so credentials are not needed —-
   // and `credentials: true` with a wildcard origin is rejected by browsers.
   .use(cors({ origin: env.FRONTEND_URL }))
   .use(router)
