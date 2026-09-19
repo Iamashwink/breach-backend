@@ -3,6 +3,7 @@ import { db, type Executor } from "@/db/client";
 import { coreEventUser } from "@/models/core/event-user";
 import { coreTeam } from "@/models/core/team";
 import { coreTeamMember } from "@/models/core/team-member";
+import { coreUser } from "@/models/core/user";
 
 export async function findEventUser(eventId: string, userId: string, executor: Executor = db) {
   const rows = await executor
@@ -95,7 +96,13 @@ export async function findTeamById(teamId: string, executor: Executor = db) {
 
 export async function getTeamMembers(teamId: string, executor: Executor = db) {
   return executor
-    .select({ userId: coreTeamMember.userId, role: coreTeamMember.role })
+    .select({
+      userId: coreTeamMember.userId,
+      role: coreTeamMember.role,
+      username: coreUser.username,
+      displayName: coreUser.displayName,
+    })
     .from(coreTeamMember)
+    .innerJoin(coreUser, eq(coreTeamMember.userId, coreUser.id))
     .where(eq(coreTeamMember.teamId, teamId));
 }

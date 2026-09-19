@@ -83,7 +83,8 @@ export async function createTeamForUser(userId: string, eventId: string, name: s
       return created;
     });
 
-    return { ...team, role: "captain" as const };
+    const members = await getTeamMembers(team.id);
+    return { ...team, role: "captain" as const, myRole: "captain" as const, members };
   } catch (error) {
     // The name check above is advisory; two teams claiming one name at the same
     // instant are separated here.
@@ -123,7 +124,8 @@ export async function joinTeamByCode(
       return found;
     });
 
-    return { ...team, role: "member" as const };
+    const members = await getTeamMembers(team.id);
+    return { ...team, role: "member" as const, myRole: "member" as const, members };
   } catch (error) {
     // core_team_member_event_user_uq — the same user joined from two requests.
     if (isUniqueViolation(error))
