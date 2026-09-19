@@ -23,6 +23,9 @@ services:
       - .env
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-breachpoint}:${POSTGRES_PASSWORD:-breachpoint}@postgres:5432/${POSTGRES_DB:-breachpoint}
+      AUTO_SEED: ${AUTO_SEED:-true}
+      AUTO_PUBLISH: ${AUTO_PUBLISH:-true}
+      EVENT_HOURS: ${EVENT_HOURS:-48}
     ports:
       - "${PORT:-8080}:8080"
     depends_on:

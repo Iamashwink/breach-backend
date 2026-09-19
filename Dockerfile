@@ -6,6 +6,9 @@ RUN bun install --frozen-lockfile
 
 COPY . .
 
+RUN chmod +x entrypoint.sh
+
 EXPOSE 8080
 
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["bun", "run", "src/index.ts"]
