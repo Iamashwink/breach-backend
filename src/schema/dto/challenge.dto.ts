@@ -12,6 +12,7 @@ export const createChallengeBody = t.Object({
   flag: t.String({ minLength: 1 }),
   maxAttempts: t.Optional(t.Number({ minimum: 1 })),
   author: t.Optional(t.String()),
+  resourceLink: t.Optional(t.String()),
 });
 
 export const updateChallengeBody = t.Object({
@@ -27,6 +28,7 @@ export const updateChallengeBody = t.Object({
   state: t.Optional(t.Union([t.Literal("hidden"), t.Literal("visible"), t.Literal("locked")])),
   maxAttempts: t.Optional(t.Nullable(t.Number({ minimum: 1 }))),
   author: t.Optional(t.String()),
+  resourceLink: t.Optional(t.Nullable(t.String())),
 });
 
 export const createHintBody = t.Object({

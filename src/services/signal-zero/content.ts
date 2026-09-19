@@ -28,6 +28,7 @@ export interface SeedPathChallenge {
   flag: string;
   isPathFinal?: boolean;
   fragmentKey?: "who" | "how" | "why";
+  resourceLink?: string;
 }
 
 /** The six categories the narration draws on. */

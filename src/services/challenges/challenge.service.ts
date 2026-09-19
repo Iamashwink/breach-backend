@@ -62,6 +62,7 @@ export async function addChallenge(
     flag: string;
     maxAttempts?: number;
     author?: string;
+    resourceLink?: string;
   },
 ) {
   await ensureEventExists(eventId);
@@ -93,6 +94,7 @@ export async function editChallenge(
     state?: "hidden" | "visible" | "locked";
     maxAttempts?: number | null;
     author?: string;
+    resourceLink?: string | null;
   },
 ) {
   const challenge = await ensureChallengeExists(challengeId, eventId);

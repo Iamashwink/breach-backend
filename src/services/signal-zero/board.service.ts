@@ -111,6 +111,7 @@ export async function getBoard(userId: string, eventId: string) {
       solves,
       maxAttempts: c.maxAttempts,
       author: c.author,
+      resourceLink: c.resourceLink,
     };
   };
 

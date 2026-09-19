@@ -24,6 +24,7 @@ const playerChallengeColumns = {
   state: coreChallenge.state,
   maxAttempts: coreChallenge.maxAttempts,
   author: coreChallenge.author,
+  resourceLink: coreChallenge.resourceLink,
   createdAt: coreChallenge.createdAt,
   updatedAt: coreChallenge.updatedAt,
 };

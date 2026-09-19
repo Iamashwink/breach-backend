@@ -34,6 +34,7 @@ export const coreChallenge = pgTable(
     state: challengeState("state").notNull().default("hidden"),
     maxAttempts: integer("max_attempts"), // NULL = unlimited
     author: text("author"),
+    resourceLink: text("resource_link"),
 
     ...timestamps,
     ...authorship,

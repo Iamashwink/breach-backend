@@ -1,0 +1,1 @@
+ALTER TABLE "core_challenge" ADD COLUMN "resource_link" text;
