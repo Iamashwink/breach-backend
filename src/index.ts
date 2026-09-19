@@ -15,8 +15,11 @@ const app = new Elysia()
   .use(cors({ origin: env.FRONTEND_URL }))
   .use(router)
   .get("/", () => ({ status: "ok" }))
-  .listen(env.PORT);
+  .listen({
+    port: env.PORT,
+    hostname: env.HOST,
+  });
 
-logger.info(`Server listening on http://localhost:${env.PORT}`);
+logger.info(`Server listening on http://${env.HOST}:${env.PORT}`);
 
 export type App = typeof app;
