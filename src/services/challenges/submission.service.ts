@@ -15,6 +15,7 @@ import {
   findActiveTeamPath,
   findPathChallenge,
   findPathsByEvent,
+  findTeamPaths,
 } from "@/repositories/sz-path.repository";
 import { isChallengeUnlocked } from "@/repositories/sz-reveal.repository";
 import { findActiveGlitch } from "@/repositories/sz-time-glitch.repository";
@@ -27,6 +28,11 @@ function hashFlag(flag: string): string {
   return createHash("sha256").update(flag.trim()).digest("hex");
 }
 
+/**
+ * Flag submission. Validates, scores against decay and the active Time
+ * Glitch, awards first-blood, hands over fragments on path finals, and
+ * advances the reveal window.
+ */
 export async function submitFlag(
   userId: string,
   eventId: string,
@@ -44,21 +50,22 @@ export async function submitFlag(
   const paths = await findPathsByEvent(eventId);
   const moduleActive = paths.length > 0;
 
-  const [activePath, pathChallenge] = await Promise.all([
+  const [activePath, pathChallenge, teamPaths] = await Promise.all([
     moduleActive ? findActiveTeamPath(teamId) : Promise.resolve(null),
     moduleActive ? findPathChallenge(challengeId) : Promise.resolve(null),
+    moduleActive ? findTeamPaths(teamId) : Promise.resolve([]),
   ]);
 
   if (moduleActive) {
     const unlocked = await isChallengeUnlocked(teamId, challengeId);
     if (!unlocked) throw new ValidationError("That challenge is not open to your team yet");
 
-    // Leaving a path closes it. The unlock rows from the abandoned attempt are
-    // kept as history, so being unlocked is not on its own permission to submit
-    // — otherwise a team could switch away and keep farming the old path's
-    // revealed challenges, which also counts toward the next free switch.
-    if (pathChallenge && pathChallenge.pathId !== activePath?.pathId) {
-      throw new ValidationError("That challenge belongs to a path your team has left");
+    // Any path the team has ever entered remains open and solvable!
+    if (pathChallenge) {
+      const hasEntered = teamPaths.some((p) => p.pathId === pathChallenge.pathId);
+      if (!hasEntered) {
+        throw new ValidationError("That challenge belongs to a path your team has not entered");
+      }
     }
   }
 
@@ -89,12 +96,15 @@ export async function submitFlag(
   const now = new Date();
   const glitch = moduleActive ? await findActiveGlitch(eventId, now) : null;
 
-  // The path penalty is a penalty on *that path*. The welcome challenge and the
-  // convergence final belong to no path, so a 0.80 carried from a skip must not
-  // follow the team onto them — the convergence final is the highest-value
-  // challenge in the event.
-  const onActivePath = pathChallenge !== null && pathChallenge.pathId === activePath?.pathId;
-  const multiplier = onActivePath ? activePath!.rewardMultiplier : FULL_MULTIPLIER;
+  // The reward multiplier belongs to the path the challenge is part of.
+  // Solving a challenge on Path A pays Path A's multiplier, even if the team has switched to Path B.
+  // Pathless challenges (welcome, convergence final) pay full multiplier (1.00).
+  const enteredPath = pathChallenge
+    ? teamPaths.find((p) => p.pathId === pathChallenge.pathId)
+    : null;
+  const multiplier = enteredPath
+    ? enteredPath.rewardMultiplier
+    : (activePath ? activePath.rewardMultiplier : FULL_MULTIPLIER);
 
   const result = await db.transaction(async (tx) => {
     // Serialises every concurrent solve of this challenge. Both the decayed

@@ -2,18 +2,21 @@ import { db } from "@/db/client";
 import { isUniqueViolation } from "@/errors/db-errors";
 import { ConflictError, NotFoundError, ValidationError } from "@/errors/error-types";
 import { findChallengesByEvent } from "@/repositories/challenge.repository";
+import { findFragmentsByTeam } from "@/repositories/sz-fragment.repository";
 import {
   countSolvesInPath,
   createTeamPath,
   deactivateTeamPath,
   findActiveTeamPath,
   findPathById,
+  findPathChallenges,
   findPathedChallengeIds,
   findPathsByEvent,
   findSolvedChallengeIds,
   findTeamPaths,
 } from "@/repositories/sz-path.repository";
 import { findPrereqsByEvent } from "@/repositories/sz-reveal.repository";
+import { findSkippedChallengeIds } from "@/repositories/sz-skip.repository";
 import { ensureCanScore } from "@/services/events/event-guard";
 import {
   FREE_SWITCH_THRESHOLD,
@@ -21,6 +24,45 @@ import {
   PENALTY_MULTIPLIER,
 } from "@/services/signal-zero/config";
 import { syncUnlocks } from "@/services/signal-zero/reveal.service";
+
+/**
+ * Checks whether a team has completed a given path:
+ * 1. Path final fragment challenge is solved, OR
+ * 2. Fragment delivered by this path is held, OR
+ * 3. All challenges on this path are solved or skipped.
+ */
+export async function isPathCompleted(
+  teamId: string,
+  eventId: string,
+  pathId: string,
+): Promise<boolean> {
+  const pathChallenges = await findPathChallenges(pathId);
+  if (pathChallenges.length === 0) return false;
+
+  const [solvedIds, skippedIds, fragments, targetPath] = await Promise.all([
+    findSolvedChallengeIds(teamId, eventId),
+    findSkippedChallengeIds(teamId, eventId),
+    findFragmentsByTeam(teamId, eventId),
+    findPathById(pathId, eventId),
+  ]);
+
+  const solvedSet = new Set(solvedIds);
+  const skippedSet = new Set(skippedIds);
+
+  const finalChallenge = pathChallenges.find((pc) => pc.isPathFinal);
+  if (finalChallenge && solvedSet.has(finalChallenge.challengeId)) {
+    return true;
+  }
+
+  if (targetPath && fragments.some((f) => f.fragmentKey === targetPath.delivers)) {
+    return true;
+  }
+
+  const allClosed = pathChallenges.every(
+    (pc) => solvedSet.has(pc.challengeId) || skippedSet.has(pc.challengeId),
+  );
+  return allClosed;
+}
 
 /**
  * The welcome challenge: the one visible challenge that belongs to no path and
@@ -61,11 +103,29 @@ export async function listPaths(userId: string, eventId: string) {
   const solvedIds = await findSolvedChallengeIds(teamId, eventId);
   const welcomeSolved = welcome ? solvedIds.includes(welcome.id) : true;
 
+  const activeAttempt = attempts.find((a) => a.isActive);
+  const activeCompleted = activeAttempt
+    ? await isPathCompleted(teamId, eventId, activeAttempt.pathId)
+    : false;
+
+  const pathCompletionStatuses = await Promise.all(
+    paths.map((p) =>
+      byPathId.has(p.id) ? isPathCompleted(teamId, eventId, p.id) : Promise.resolve(false),
+    ),
+  );
+
   return {
     welcomeSolved,
     canSelect: welcomeSolved && !attempts.some((a) => a.isActive),
-    paths: paths.map((path) => {
+    paths: paths.map((path, idx) => {
       const attempt = byPathId.get(path.id);
+      const isAttempted = !!attempt;
+      const isCompleted = pathCompletionStatuses[idx] ?? false;
+      const isUnattempted = !attempt;
+      // Locked if team is on an active path that has not been completed yet
+      const isLocked = isUnattempted && !!activeAttempt && !activeCompleted;
+      const canSwitchFree = isUnattempted && (!activeAttempt || activeCompleted);
+
       return {
         id: path.id,
         code: path.code,
@@ -73,9 +133,11 @@ export async function listPaths(userId: string, eventId: string) {
         delivers: path.delivers,
         introNarration: path.introNarration,
         isActive: attempt?.isActive ?? false,
-        // A path already attempted can never be re-entered — the unique
-        // constraint on (team_id, path_id) exists to stop farming it twice.
+        isAttempted,
         isAvailable: !attempt,
+        isCompleted,
+        isLocked,
+        canSwitchFree,
         rewardMultiplier: attempt?.rewardMultiplier ?? null,
       };
     }),
@@ -114,10 +176,6 @@ export async function selectPath(userId: string, eventId: string, pathId: string
 
     return { path, attempt };
   } catch (error) {
-    // Two teammates pressing "choose path" together: the checks above both
-    // passed, and the database decided. `sz_one_active_path` means a second
-    // attempt is live, the (team_id, path_id) unique means this exact path was
-    // already taken — both are the 409s checked for above, just later.
     if (isUniqueViolation(error, "sz_one_active_path"))
       throw new ConflictError("Your team is already on a path — switch instead");
     if (isUniqueViolation(error))
@@ -127,11 +185,14 @@ export async function selectPath(userId: string, eventId: string, pathId: string
 }
 
 /**
- * Switching paths. 8+ solves in the active path is a free switch at full
- * rewards; switching earlier costs 20% of everything earned in the *new* path.
+ * Switching paths.
+ * Completing the active path (or achieving 8+ solves) grants a 100% free switch
+ * with 0 points deducted and full (1.00x) rewards on the new path.
  *
- * The old attempt's solves keep their snapshotted points — switching never
- * retroactively edits a score.
+ * Switching early in-between before path completion costs the team:
+ * rewards on the new path will be 80% (PENALTY_MULTIPLIER).
+ *
+ * All challenges on previously entered paths remain available to solve.
  */
 export async function switchPath(userId: string, eventId: string, pathId: string) {
   const { teamId } = await ensureCanScore(userId, eventId, "switch paths");
@@ -147,13 +208,15 @@ export async function switchPath(userId: string, eventId: string, pathId: string
   if (attempted.some((a) => a.pathId === pathId))
     throw new ConflictError("Your team has already run this path");
 
-  const solvesInPath = await countSolvesInPath(teamId, active.pathId);
-  const isFree = solvesInPath >= FREE_SWITCH_THRESHOLD;
+  const [solvesInPath, isCompleted] = await Promise.all([
+    countSolvesInPath(teamId, active.pathId),
+    isPathCompleted(teamId, eventId, active.pathId),
+  ]);
+
+  const isFree = isCompleted || solvesInPath >= FREE_SWITCH_THRESHOLD;
 
   const attempt = await db.transaction(async (tx) => {
     const closed = await deactivateTeamPath(active.id, tx);
-    // Zero rows means another request switched first; abort rather than open a
-    // second active attempt and trip the one-active-path index.
     if (!closed) throw new ConflictError("Path switch already in progress");
 
     const created = await createTeamPath(
@@ -176,7 +239,7 @@ export async function switchPath(userId: string, eventId: string, pathId: string
     free: isFree,
     solvesInPreviousPath: solvesInPath,
     message: isFree
-      ? "Free switch — full rewards on the new path"
-      : `Switched early (${solvesInPath}/${FREE_SWITCH_THRESHOLD} solves) — 80% rewards on the new path`,
+      ? "Path completed! Free switch — full 100% rewards on the new path (0 points deducted)"
+      : `Switched in-between before completing path (${solvesInPath} solves) — 80% rewards on the new path`,
   };
 }

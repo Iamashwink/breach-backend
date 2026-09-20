@@ -115,23 +115,6 @@ export async function getBoard(userId: string, eventId: string) {
     };
   };
 
-  const pathBoard = pathChallenges
-    .filter((pc) => unlocked.has(pc.challengeId) && byId.get(pc.challengeId)?.state === "visible")
-    .map((pc) => {
-      const isSolved = solved.has(pc.challengeId);
-      const isSkipped = skipped.has(pc.challengeId);
-      return {
-        ...present(pc.challengeId),
-        sequence: pc.sequence,
-        tier: pc.tier,
-        isPathFinal: pc.isPathFinal,
-        status: isSolved ? "solved" : isSkipped ? "skipped" : "open",
-        preStory: pc.preStory,
-        // The post-story is the reward for solving — withheld until then.
-        postStory: isSolved ? pc.postStory : null,
-      };
-    });
-
   // Every path's challenge ids and this team's attempt at it, so the dashboard
   // can render A/B/C progress without three more round trips.
   const [attempts, allPathChallenges] = await Promise.all([
@@ -143,16 +126,52 @@ export async function getBoard(userId: string, eventId: string) {
     allPaths.map((p, i) => [p.id, (allPathChallenges[i] ?? []).map((pc) => pc.challengeId)]),
   );
 
-  /**
-   * What the team closed on every path, by sequence — including paths they have
-   * left.
-   *
-   * `challenges` above only carries the *active* path's reveal window, so
-   * without this a team that switched from A to B would see its finished A
-   * nodes drawn as sealed: the points are on the dashboard but the chart has
-   * forgotten them. Sequences only, no titles or stories — a left path is
-   * closed forever, and there is no reason to hand back the content of one.
-   */
+  // Determine if active path is completed
+  const activePathChallenges = activePath
+    ? (allPathChallenges[allPaths.findIndex((p) => p.id === activePath.pathId)] ?? [])
+    : [];
+  const activeFinalPc = activePathChallenges.find((pc) => pc.isPathFinal);
+  const activeFinalSolved = activeFinalPc ? solved.has(activeFinalPc.challengeId) : false;
+  const activePathDelivers = allPaths.find((p) => p.id === activePath?.pathId)?.delivers;
+  const activeHasFragment = activePathDelivers
+    ? fragments.some((f) => f.fragmentKey === activePathDelivers)
+    : false;
+  const activeSolvedCount = activePathChallenges.filter((pc) => solved.has(pc.challengeId)).length;
+  const activeSkippedCount = activePathChallenges.filter((pc) => skipped.has(pc.challengeId)).length;
+  const isActivePathCompleted =
+    !!activePath &&
+    (activeFinalSolved ||
+      activeHasFragment ||
+      (activePathChallenges.length > 0 &&
+        activeSolvedCount + activeSkippedCount >= activePathChallenges.length));
+
+  // Load all unlocked challenges across ALL paths the team has ever entered.
+  // When a team switches to a new path, previous paths do NOT get sealed —
+  // their challenges remain available to solve.
+  const pathBoard: any[] = [];
+  for (let i = 0; i < allPaths.length; i++) {
+    const p = allPaths[i]!;
+    const attempt = attemptByPathId.get(p.id);
+    if (!attempt) continue; // Only include paths the team has entered
+    const challengesForThisPath = allPathChallenges[i] ?? [];
+    for (const pc of challengesForThisPath) {
+      if (!unlocked.has(pc.challengeId) || byId.get(pc.challengeId)?.state !== "visible") continue;
+      const isSolved = solved.has(pc.challengeId);
+      const isSkipped = skipped.has(pc.challengeId);
+      pathBoard.push({
+        ...present(pc.challengeId),
+        pathId: p.id,
+        pathCode: p.code,
+        sequence: pc.sequence,
+        tier: pc.tier,
+        isPathFinal: pc.isPathFinal,
+        status: isSolved ? "solved" : isSkipped ? "skipped" : "open",
+        preStory: pc.preStory,
+        postStory: isSolved ? pc.postStory : null,
+      });
+    }
+  }
+
   const history = allPaths.map((path, i) => {
     const pathChallengeRows = allPathChallenges[i] ?? [];
     return {
@@ -165,12 +184,6 @@ export async function getBoard(userId: string, eventId: string) {
 
   // Pathless challenges: the welcome challenge, and the convergence final once
   // all three fragments are in hand.
-  //
-  // `isFinal` is derived the same way the module identifies these two
-  // elsewhere — the convergence is gated on the three path finals, the welcome
-  // gate has no prerequisites at all. Sending the distinction saves the client
-  // from guessing at it by point value, which would break the moment an admin
-  // retuned the scoring.
   const gated = new Set(prereqs.map((p) => p.challengeId));
   const standalone = [...unlocked]
     .filter((id) => !pathedChallengeIds.has(id))
@@ -181,16 +194,10 @@ export async function getBoard(userId: string, eventId: string) {
     }))
     .filter((c) => c.id);
 
-  // Points are attributed to the path that owned the challenge, not to the
-  // team's current attempt — a team that banked six solves in A and switched
-  // to B still holds A's points, and the dashboard must show that.
   const pointsByCode = new Map(pathScoreRows.map((r) => [r.code, r]));
 
   return {
     team: { id: team.id, name: team.name },
-    // Authoritative score, straight off the same view the scoreboard reads, so
-    // the HUD and the board can never disagree. Hint spend is already netted
-    // out — do not subtract it again client-side.
     score: standing?.score ?? 0,
     rank: standing?.rank ?? null,
     solveCount: standing?.solveCount ?? solvedIds.length,
@@ -198,12 +205,28 @@ export async function getBoard(userId: string, eventId: string) {
       A: pointsByCode.get("A")?.points ?? 0,
       B: pointsByCode.get("B")?.points ?? 0,
       C: pointsByCode.get("C")?.points ?? 0,
-      // Pathless solves (welcome, convergence) group under a null code.
       standalone: pointsByCode.get(null)?.points ?? 0,
     },
-    paths: allPaths.map((p) => {
+    paths: allPaths.map((p, i) => {
       const attempt = attemptByPathId.get(p.id);
       const ids = challengeIdsByPath.get(p.id) ?? [];
+      const solvedInPath = ids.filter((id) => solved.has(id)).length;
+      const skippedInPath = ids.filter((id) => skipped.has(id)).length;
+      const totalInPath = ids.length;
+
+      const pathChallenges = allPathChallenges[i] ?? [];
+      const finalPc = pathChallenges.find((pc) => pc.isPathFinal);
+      const finalSolved = finalPc ? solved.has(finalPc.challengeId) : false;
+      const hasFragment = fragments.some((f) => f.fragmentKey === p.delivers);
+      const isCompleted =
+        finalSolved ||
+        hasFragment ||
+        (totalInPath > 0 && solvedInPath + skippedInPath >= totalInPath);
+
+      const isUnattempted = !attempt;
+      const isLocked = isUnattempted && !!activePath && !isActivePathCompleted;
+      const canSwitchFree = isUnattempted && (!activePath || isActivePathCompleted);
+
       return {
         id: p.id,
         code: p.code,
@@ -211,15 +234,16 @@ export async function getBoard(userId: string, eventId: string) {
         delivers: p.delivers,
         introNarration: p.introNarration,
         isActive: attempt?.isActive ?? false,
-        // (team_id, path_id) is unique: an attempted path can never be
-        // re-entered, so "attempted and not active" means permanently closed.
         isAttempted: !!attempt,
         isAvailable: !attempt,
+        isCompleted,
+        isLocked,
+        canSwitchFree,
         rewardMultiplier: attempt?.rewardMultiplier ?? null,
         entryReason: attempt?.entryReason ?? null,
-        solved: ids.filter((id) => solved.has(id)).length,
-        skipped: ids.filter((id) => skipped.has(id)).length,
-        total: ids.length,
+        solved: solvedInPath,
+        skipped: skippedInPath,
+        total: totalInPath,
         points: pointsByCode.get(p.code)?.points ?? 0,
       };
     }),
@@ -234,6 +258,7 @@ export async function getBoard(userId: string, eventId: string) {
           entryReason: activePath!.entryReason,
           solved: pathChallenges.filter((pc) => solved.has(pc.challengeId)).length,
           total: pathChallenges.length,
+          isCompleted: isActivePathCompleted,
         }
       : null,
     challenges: pathBoard,

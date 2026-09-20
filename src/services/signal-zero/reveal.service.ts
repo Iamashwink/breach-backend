@@ -7,6 +7,7 @@ import {
   findPathedChallengeIds,
   findPathsByEvent,
   findSolvedChallengeIds,
+  findTeamPaths,
 } from "@/repositories/sz-path.repository";
 import { findSkippedChallengeIds } from "@/repositories/sz-skip.repository";
 import {
@@ -59,7 +60,7 @@ export async function syncUnlocks(
   const paths = await findPathsByEvent(eventId, executor);
   if (paths.length === 0) return [];
 
-  const [challenges, pathedIds, prereqs, unlockedIds, solvedIds, skippedIds, activePath] =
+  const [challenges, pathedIds, prereqs, unlockedIds, solvedIds, skippedIds, activePath, teamPaths] =
     await Promise.all([
       findChallengesByEvent(eventId, executor),
       findPathedChallengeIds(eventId, executor),
@@ -68,6 +69,7 @@ export async function syncUnlocks(
       findSolvedChallengeIds(teamId, eventId, executor),
       findSkippedChallengeIds(teamId, eventId, executor),
       findActiveTeamPath(teamId, executor),
+      findTeamPaths(teamId, executor),
     ]);
 
   const pathed = new Set(pathedIds);
@@ -75,7 +77,6 @@ export async function syncUnlocks(
   const solved = new Set(solvedIds);
   const closedSet = new Set([...solvedIds, ...skippedIds]);
 
-  // challengeId -> ids it requires
   const requires = new Map<string, string[]>();
   for (const { challengeId, requiresId } of prereqs) {
     const list = requires.get(challengeId) ?? [];
@@ -108,9 +109,11 @@ export async function syncUnlocks(
     add(challenge.id, requires.has(challenge.id) ? "prereq" : "initial");
   }
 
-  // 2. The active path's sliding window.
-  if (activePath) {
-    const pathChallenges = await findPathChallenges(activePath.pathId, executor);
+  // 2. Sliding windows for ALL paths the team has ever entered.
+  // When a team switches to a new path, previous paths do not seal and continue
+  // unlocking as their challenges are solved.
+  for (const tp of teamPaths) {
+    const pathChallenges = await findPathChallenges(tp.pathId, executor);
 
     const closed = pathChallenges.filter((pc) => closedSet.has(pc.challengeId)).length;
     const target = targetUnlockCount(closed);

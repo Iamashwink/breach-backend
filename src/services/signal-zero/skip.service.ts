@@ -5,6 +5,7 @@ import { findSolveByTeamAndChallenge } from "@/repositories/submission.repositor
 import {
   findActiveTeamPath,
   findPathChallenge,
+  findTeamPaths,
   lockActiveTeamPath,
   penaliseTeamPath,
 } from "@/repositories/sz-path.repository";
@@ -28,27 +29,19 @@ export async function skipChallenge(userId: string, eventId: string, challengeId
   const challenge = await findChallengeById(challengeId, eventId);
   if (!challenge || challenge.state !== "visible") throw new NotFoundError("Challenge not found");
 
-  const active = await findActiveTeamPath(teamId);
-  if (!active) throw new ValidationError("Your team is not on a path yet");
-
+  const teamPaths = await findTeamPaths(teamId);
   const pathChallenge = await findPathChallenge(challengeId);
   if (!pathChallenge) throw new ValidationError("This challenge cannot be skipped");
-  if (pathChallenge.pathId !== active.pathId)
-    throw new ValidationError("That challenge is not on your active path");
+  const targetPath = teamPaths.find((p) => p.pathId === pathChallenge.pathId);
+  if (!targetPath)
+    throw new ValidationError("That challenge is not on an entered path");
 
   const unlocked = await isChallengeUnlocked(teamId, challengeId);
   if (!unlocked) throw new ValidationError("That challenge is not open to your team yet");
 
   const result = await db.transaction(async (tx) => {
-    // The quota is a count the team reads and then writes against. Two
-    // teammates skipping two *different* challenges would both read the same
-    // remaining count and both commit — the sz_skip primary key on
-    // (team_id, challenge_id) only stops them skipping the *same* one. Locking
-    // the shared attempt row is what actually serialises them.
     const locked = await lockActiveTeamPath(teamId, tx);
-    if (!locked) throw new ValidationError("Your team is not on a path yet");
-    if (locked.pathId !== pathChallenge.pathId)
-      throw new ValidationError("That challenge is not on your active path");
+    if (!locked && teamPaths.length === 0) throw new ValidationError("Your team is not on a path yet");
 
     const solved = await findSolveByTeamAndChallenge(teamId, challengeId, tx);
     if (solved) throw new ConflictError("Your team has already solved this challenge");
@@ -61,10 +54,10 @@ export async function skipChallenge(userId: string, eventId: string, challengeId
       throw new ValidationError(`No skips left (${SKIP_QUOTA} used)`);
 
     await createSkip(
-      { eventId, teamId, challengeId, teamPathId: locked.id, usedBy: userId },
+      { eventId, teamId, challengeId, teamPathId: targetPath.id, usedBy: userId },
       tx,
     );
-    await penaliseTeamPath(locked.id, PENALTY_MULTIPLIER, tx);
+    await penaliseTeamPath(targetPath.id, PENALTY_MULTIPLIER, tx);
     const revealed = await syncUnlocks(teamId, eventId, "skip", tx);
 
     return { used: skipped.length, revealed };
