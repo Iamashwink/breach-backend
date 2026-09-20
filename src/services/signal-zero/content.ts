@@ -500,7 +500,7 @@ export const SEED_WELCOME = {
     "At 03:17:42, three isolated systems on three continents transmitted the same 41 bytes. No sender. No route. Decode the payload.",
   category: "Forensics",
   difficulty: "easy" as SeedDifficulty,
-  flag: "BreachPoint{w3_h4v3_4lr34dy_7r13d_7h15_0nc3}",
+  flag: process.env.WELCOME_FLAG ?? "BreachPoint{w3_h4v3_4lr34dy_7r13d_7h15_0nc3}",
 };
 
 export const SEED_CONVERGENCE = {
