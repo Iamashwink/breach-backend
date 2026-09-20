@@ -17,6 +17,7 @@ import { findPrereqsByEvent, findUnlockedChallengeIds } from "@/repositories/sz-
 import { findFragmentsByTeam } from "@/repositories/sz-fragment.repository";
 import { findActiveGlitch, findUpcomingGlitches } from "@/repositories/sz-time-glitch.repository";
 import { ensureCanScore } from "@/services/events/event-guard";
+import { getTeamMembers } from "@/repositories/team.repository";
 import { SKIP_QUOTA } from "@/services/signal-zero/config";
 import { syncUnlocks } from "@/services/signal-zero/reveal.service";
 
@@ -30,7 +31,7 @@ import { syncUnlocks } from "@/services/signal-zero/reveal.service";
  * than needing a backfill.
  */
 export async function getBoard(userId: string, eventId: string) {
-  const { team, teamId } = await ensureCanScore(userId, eventId, "view the board");
+  const { team, teamId, role } = await ensureCanScore(userId, eventId, "view the board");
 
   await syncUnlocks(teamId, eventId, "initial");
 
@@ -51,6 +52,7 @@ export async function getBoard(userId: string, eventId: string) {
     prereqs,
     pathedIds,
     solveCounts,
+    members,
   ] = await Promise.all([
     findChallengesByEvent(eventId),
     findUnlockedChallengeIds(teamId, eventId),
@@ -67,6 +69,7 @@ export async function getBoard(userId: string, eventId: string) {
     findPrereqsByEvent(eventId),
     findPathedChallengeIds(eventId),
     findSolveCountsByEvent(eventId),
+    getTeamMembers(teamId),
   ]);
 
   const unlocked = new Set(unlockedIds);
@@ -197,7 +200,13 @@ export async function getBoard(userId: string, eventId: string) {
   const pointsByCode = new Map(pathScoreRows.map((r) => [r.code, r]));
 
   return {
-    team: { id: team.id, name: team.name },
+    team: {
+      id: team.id,
+      name: team.name,
+      joinCode: team.joinCode,
+      myRole: role,
+      members,
+    },
     score: standing?.score ?? 0,
     rank: standing?.rank ?? null,
     solveCount: standing?.solveCount ?? solvedIds.length,

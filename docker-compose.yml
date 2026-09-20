@@ -28,6 +28,8 @@ services:
       EVENT_HOURS: ${EVENT_HOURS:-48}
     ports:
       - "${PORT:-8080}:8080"
+    volumes:
+      - ./src:/app/src
     depends_on:
       postgres:
         condition: service_healthy
