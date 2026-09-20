@@ -3,6 +3,9 @@ import { db, type Executor } from "@/db/client";
 import { coreChallenge } from "@/models/core/challenge";
 import { coreHint } from "@/models/core/hint";
 import { coreHintUnlock } from "@/models/core/hint-unlock";
+import { coreSolve } from "@/models/core/solve";
+import { coreSubmission } from "@/models/core/submission";
+import { szSkip } from "@/models/event-specific/skip";
 
 /**
  * Every column a player may see. `flagHash` is deliberately absent: the hashes
@@ -193,3 +196,26 @@ export async function createHintUnlock(data: {
   const rows = await db.insert(coreHintUnlock).values(data).returning();
   return rows[0]!;
 }
+
+export async function deleteChallenge(challengeId: string, eventId: string) {
+  return db.transaction(async (tx) => {
+    // Delete dependent records that have restrict foreign keys
+    await tx.delete(coreSolve).where(and(eq(coreSolve.challengeId, challengeId), eq(coreSolve.eventId, eventId)));
+    await tx.delete(coreSubmission).where(and(eq(coreSubmission.challengeId, challengeId), eq(coreSubmission.eventId, eventId)));
+    await tx.delete(szSkip).where(and(eq(szSkip.challengeId, challengeId), eq(szSkip.eventId, eventId)));
+    
+    // Hints
+    const hints = await tx.select({ id: coreHint.id }).from(coreHint).where(eq(coreHint.challengeId, challengeId));
+    for (const h of hints) {
+      await tx.delete(coreHintUnlock).where(eq(coreHintUnlock.hintId, h.id));
+    }
+    await tx.delete(coreHint).where(and(eq(coreHint.challengeId, challengeId), eq(coreHint.eventId, eventId)));
+    
+    const rows = await tx
+      .delete(coreChallenge)
+      .where(and(eq(coreChallenge.id, challengeId), eq(coreChallenge.eventId, eventId)))
+      .returning();
+    return rows[0] ?? null;
+  });
+}
+

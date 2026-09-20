@@ -3,6 +3,7 @@ import { authGuard, adminGuard } from "@/middlewares/auth-guard";
 import {
   handleCreateChallenge,
   handleCreateHint,
+  handleDeleteChallenge,
   handleDeleteHint,
   handleListChallengesAdmin,
   handleListChallengesPlayer,
@@ -57,6 +58,11 @@ export const adminChallengeRoutes = new Elysia()
     "/admin/events/:eventId/challenges/:challengeId",
     ({ params, body, user }) => handleUpdateChallenge(params.challengeId, params.eventId, user.id, body),
     { params: challengeParams, body: updateChallengeBody },
+  )
+  .delete(
+    "/admin/events/:eventId/challenges/:challengeId",
+    ({ params }) => handleDeleteChallenge(params.challengeId, params.eventId),
+    { params: challengeParams },
   )
   .get(
     "/admin/events/:eventId/challenges/:challengeId/hints",

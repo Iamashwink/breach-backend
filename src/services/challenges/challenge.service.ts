@@ -10,6 +10,7 @@ import {
   createChallenge,
   createHint,
   createHintUnlock,
+  deleteChallenge,
   deleteHint,
   findChallengeById,
   findChallengesByEvent,
@@ -117,6 +118,12 @@ export async function editChallenge(
   if (!updated) throw new NotFoundError("Challenge not found");
   return updated;
 }
+
+export async function removeChallenge(challengeId: string, eventId: string) {
+  await ensureChallengeExists(challengeId, eventId);
+  return deleteChallenge(challengeId, eventId);
+}
+
 
 export async function addHint(
   challengeId: string,

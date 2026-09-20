@@ -5,6 +5,9 @@ import {
   findEventBySlug,
   createEvent,
   updateEvent,
+  deleteEvent,
+  resetEventActivity,
+  getEventStats,
 } from "@/repositories/event.repository";
 import { ConflictError, NotFoundError, ValidationError } from "@/errors/error-types";
 
@@ -29,7 +32,7 @@ export async function createNewEvent(body: {
   endsAt?: string;
   createdBy: string;
 }) {
-  const slug = body.slug ?? slugify(body.name);
+  const slug = body.slug ? slugify(body.slug) : slugify(body.name);
   const existing = await findEventBySlug(slug);
   if (existing) throw new ConflictError(`Slug "${slug}" is already in use`);
 
@@ -61,6 +64,7 @@ export async function patchEvent(
   eventId: string,
   body: {
     name?: string;
+    slug?: string;
     description?: string;
     startsAt?: string | null;
     endsAt?: string | null;
@@ -71,6 +75,15 @@ export async function patchEvent(
 ) {
   const event = await findEventById(eventId);
   if (!event) throw new NotFoundError("Event not found");
+
+  let slug: string | undefined = undefined;
+  if (body.slug) {
+    slug = slugify(body.slug);
+    if (slug !== event.slug) {
+      const existing = await findEventBySlug(slug);
+      if (existing) throw new ConflictError(`Slug "${slug}" is already in use`);
+    }
+  }
 
   const startsAt = parseNullableDate(body.startsAt, "startsAt");
   const endsAt = parseNullableDate(body.endsAt, "endsAt");
@@ -89,6 +102,7 @@ export async function patchEvent(
 
   const data: Parameters<typeof updateEvent>[1] = {
     name: body.name,
+    slug,
     description: body.description,
     startsAt,
     endsAt,
@@ -102,4 +116,22 @@ export async function patchEvent(
   }
 
   return updateEvent(eventId, data);
+}
+
+export async function deleteEventService(eventId: string) {
+  const event = await findEventById(eventId);
+  if (!event) throw new NotFoundError("Event not found");
+  return deleteEvent(eventId);
+}
+
+export async function resetEventService(eventId: string) {
+  const event = await findEventById(eventId);
+  if (!event) throw new NotFoundError("Event not found");
+  return resetEventActivity(eventId);
+}
+
+export async function getEventStatsService(eventId: string) {
+  const event = await findEventById(eventId);
+  if (!event) throw new NotFoundError("Event not found");
+  return getEventStats(eventId);
 }

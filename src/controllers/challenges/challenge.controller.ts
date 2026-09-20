@@ -3,6 +3,7 @@ import {
   addChallenge,
   addHint,
   editChallenge,
+  removeChallenge,
   listChallengesAdmin,
   listChallengesPlayer,
   listHints,
@@ -35,6 +36,12 @@ export async function handleUpdateChallenge(
 ) {
   return editChallenge(challengeId, eventId, userId, body);
 }
+
+export async function handleDeleteChallenge(challengeId: string, eventId: string) {
+  logger.info({ challengeId, eventId }, "Deleting challenge");
+  return removeChallenge(challengeId, eventId);
+}
+
 
 export async function handleCreateHint(
   challengeId: string,

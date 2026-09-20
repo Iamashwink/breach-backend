@@ -21,6 +21,7 @@ export async function patch(
   eventId: string,
   body: {
     name?: string;
+    slug?: string;
     description?: string;
     startsAt?: string | null;
     endsAt?: string | null;
@@ -31,3 +32,16 @@ export async function patch(
 ) {
   return eventService.patchEvent(eventId, { ...body, updatedBy });
 }
+
+export async function remove(eventId: string) {
+  return eventService.deleteEventService(eventId);
+}
+
+export async function reset(eventId: string) {
+  return eventService.resetEventService(eventId);
+}
+
+export async function stats(eventId: string) {
+  return eventService.getEventStatsService(eventId);
+}
+

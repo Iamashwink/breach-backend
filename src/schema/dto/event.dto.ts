@@ -10,6 +10,7 @@ export const createEventBody = t.Object({
 
 export const updateEventBody = t.Object({
   name: t.Optional(t.String({ minLength: 1 })),
+  slug: t.Optional(t.String({ minLength: 1 })),
   description: t.Optional(t.String()),
   // Omit to leave unchanged, send null to clear. Clearing is what takes a
   // published event back to draft.
