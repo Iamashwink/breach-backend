@@ -2,6 +2,7 @@ import Elysia, { t } from "elysia";
 import { authGuard, adminGuard } from "@/middlewares/auth-guard";
 import {
   handleCreateGlitch,
+  handleDeleteAllGlitches,
   handleDeleteGlitch,
   handleGenerateGlitches,
   handleGetBoard,
@@ -72,6 +73,11 @@ export const adminSignalZeroRoutes = new Elysia()
     "/admin/events/:eventId/time-glitches/generate",
     ({ params, body, user }) => handleGenerateGlitches(params.eventId, user.id, body),
     { params: eventParams, body: generateGlitchesBody },
+  )
+  .delete(
+    "/admin/events/:eventId/time-glitches",
+    ({ params }) => handleDeleteAllGlitches(params.eventId),
+    { params: eventParams },
   )
   .delete(
     "/admin/events/:eventId/time-glitches/:glitchId",

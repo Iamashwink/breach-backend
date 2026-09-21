@@ -6,6 +6,8 @@ import { coreHintUnlock } from "@/models/core/hint-unlock";
 import { coreSolve } from "@/models/core/solve";
 import { coreSubmission } from "@/models/core/submission";
 import { szSkip } from "@/models/event-specific/skip";
+import { szPathChallenge } from "@/models/event-specific/path-challenge";
+import { szPath } from "@/models/event-specific/path";
 
 /**
  * Every column a player may see. `flagHash` is deliberately absent: the hashes
@@ -39,11 +41,52 @@ const playerChallengeColumns = {
  * differ between two calls in the same request.
  */
 export async function findChallengesByEvent(eventId: string, executor: Executor = db) {
-  return executor
-    .select()
+  const rows = await executor
+    .select({
+      id: coreChallenge.id,
+      eventId: coreChallenge.eventId,
+      title: coreChallenge.title,
+      description: coreChallenge.description,
+      categoryId: coreChallenge.categoryId,
+      difficulty: coreChallenge.difficulty,
+      initialPoints: coreChallenge.initialPoints,
+      minPoints: coreChallenge.minPoints,
+      decayThreshold: coreChallenge.decayThreshold,
+      decayType: coreChallenge.decayType,
+      flagHash: coreChallenge.flagHash,
+      state: coreChallenge.state,
+      maxAttempts: coreChallenge.maxAttempts,
+      author: coreChallenge.author,
+      resourceLink: coreChallenge.resourceLink,
+      createdAt: coreChallenge.createdAt,
+      updatedAt: coreChallenge.updatedAt,
+      createdBy: coreChallenge.createdBy,
+      updatedBy: coreChallenge.updatedBy,
+      pathCode: szPath.code,
+      sequence: szPathChallenge.sequence,
+    })
     .from(coreChallenge)
+    .leftJoin(szPathChallenge, eq(szPathChallenge.challengeId, coreChallenge.id))
+    .leftJoin(szPath, eq(szPath.id, szPathChallenge.pathId))
     .where(eq(coreChallenge.eventId, eventId))
-    .orderBy(asc(coreChallenge.createdAt), asc(coreChallenge.id));
+    .orderBy(
+      asc(szPath.code),
+      asc(szPathChallenge.sequence),
+      asc(coreChallenge.createdAt),
+      asc(coreChallenge.id),
+    );
+
+  return rows.map((r) => {
+    let slot: string | null = r.pathCode && r.sequence ? `${r.pathCode}${r.sequence}` : null;
+    if (!slot) {
+      if (r.title.toLowerCase().includes("transmission zero")) slot = "START";
+      else if (r.title.toLowerCase().includes("convergence")) slot = "FINAL";
+    }
+    return {
+      ...r,
+      slot,
+    };
+  });
 }
 
 export async function findVisibleChallengesByEvent(eventId: string, executor: Executor = db) {

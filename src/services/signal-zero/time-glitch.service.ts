@@ -3,6 +3,7 @@ import { findEventById } from "@/repositories/event.repository";
 import {
   createGlitch,
   createGlitches,
+  deleteAllGlitches,
   deleteGlitch,
   findActiveGlitch,
   findGlitchesByEvent,
@@ -111,4 +112,10 @@ export async function removeGlitch(glitchId: string, eventId: string) {
   const deleted = await deleteGlitch(glitchId, eventId);
   if (!deleted) throw new NotFoundError("Glitch not found");
   return deleted;
+}
+
+export async function removeAllGlitches(eventId: string) {
+  const event = await findEventById(eventId);
+  if (!event) throw new NotFoundError("Event not found");
+  return deleteAllGlitches(eventId);
 }

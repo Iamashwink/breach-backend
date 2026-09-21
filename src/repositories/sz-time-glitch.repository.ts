@@ -66,3 +66,11 @@ export async function deleteGlitch(glitchId: string, eventId: string) {
     .returning();
   return rows[0] ?? null;
 }
+
+export async function deleteAllGlitches(eventId: string) {
+  const rows = await db
+    .delete(szTimeGlitch)
+    .where(eq(szTimeGlitch.eventId, eventId))
+    .returning();
+  return rows;
+}

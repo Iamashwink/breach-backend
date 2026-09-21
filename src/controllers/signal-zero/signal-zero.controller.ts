@@ -6,6 +6,7 @@ import {
   generateGlitchSchedule,
   getGlitchStatus,
   listGlitches,
+  removeAllGlitches,
   removeGlitch,
 } from "@/services/signal-zero/time-glitch.service";
 
@@ -55,4 +56,8 @@ export async function handleGenerateGlitches(
 
 export async function handleDeleteGlitch(glitchId: string, eventId: string) {
   return removeGlitch(glitchId, eventId);
+}
+
+export async function handleDeleteAllGlitches(eventId: string) {
+  return removeAllGlitches(eventId);
 }

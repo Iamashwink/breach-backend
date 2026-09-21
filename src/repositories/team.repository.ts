@@ -124,7 +124,10 @@ export async function findAllTeamsByEvent(eventId: string, executor: Executor = 
   for (const t of teams) {
     const members = await getTeamMembers(t.id, executor);
     const solves = await executor
-      .select({ totalPoints: sql<number>`COALESCE(SUM(${coreSolve.pointsAwarded}), 0)` })
+      .select({
+        totalPoints: sql<number>`COALESCE(SUM(${coreSolve.pointsAwarded}), 0)`,
+        solveCount: count(coreSolve.challengeId),
+      })
       .from(coreSolve)
       .where(and(eq(coreSolve.teamId, t.id), eq(coreSolve.eventId, eventId), isNull(coreSolve.revokedAt)));
     result.push({
@@ -132,6 +135,7 @@ export async function findAllTeamsByEvent(eventId: string, executor: Executor = 
       banned: !!t.disqualifiedAt,
       members,
       score: Number(solves[0]?.totalPoints ?? 0),
+      solveCount: Number(solves[0]?.solveCount ?? 0),
     });
   }
   return result;
