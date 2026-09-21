@@ -188,6 +188,13 @@ export async function getBoard(userId: string, eventId: string) {
   // Pathless challenges: the welcome challenge, and the convergence final once
   // all three fragments are in hand.
   const gated = new Set(prereqs.map((p) => p.challengeId));
+  const finalConvergenceChallenge = challenges.find(
+    (c) => !pathedChallengeIds.has(c.id) && gated.has(c.id),
+  );
+  if (finalConvergenceChallenge && fragments.length >= 3) {
+    unlocked.add(finalConvergenceChallenge.id);
+  }
+
   const standalone = [...unlocked]
     .filter((id) => !pathedChallengeIds.has(id))
     .map((id) => ({
@@ -225,6 +232,7 @@ export async function getBoard(userId: string, eventId: string) {
 
       const pathChallenges = allPathChallenges[i] ?? [];
       const finalPc = pathChallenges.find((pc) => pc.isPathFinal);
+      const finalCore = finalPc ? byId.get(finalPc.challengeId) : null;
       const finalSolved = finalPc ? solved.has(finalPc.challengeId) : false;
       const hasFragment = fragments.some((f) => f.fragmentKey === p.delivers);
       const isCompleted =
@@ -254,6 +262,19 @@ export async function getBoard(userId: string, eventId: string) {
         skipped: skippedInPath,
         total: totalInPath,
         points: pointsByCode.get(p.code)?.points ?? 0,
+        finalChallenge: finalPc
+          ? {
+              id: finalPc.challengeId,
+              title: finalCore?.title ?? `${p.code}10`,
+              slot: `${p.code}10`,
+              isSolved: finalSolved || hasFragment,
+              points: finalCore
+                ? glitch
+                  ? finalCore.initialPoints
+                  : calculatePoints(finalCore, solveCounts.get(finalCore.id) ?? 0)
+                : 0,
+            }
+          : null,
       };
     }),
     path: path

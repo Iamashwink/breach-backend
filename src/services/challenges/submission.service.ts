@@ -12,6 +12,7 @@ import {
   getNextSolveOrder,
 } from "@/repositories/submission.repository";
 import {
+  createTeamPath,
   findActiveTeamPath,
   findPathChallenge,
   findPathsByEvent,
@@ -57,14 +58,18 @@ export async function submitFlag(
   ]);
 
   if (moduleActive) {
-    const unlocked = await isChallengeUnlocked(teamId, challengeId);
-    if (!unlocked) throw new ValidationError("That challenge is not open to your team yet");
+    // Path final challenges (A10, B10, C10) can be solved directly from the Convergence Terminal
+    const isPathFinalChallenge = pathChallenge?.isPathFinal;
+    if (!isPathFinalChallenge) {
+      const unlocked = await isChallengeUnlocked(teamId, challengeId);
+      if (!unlocked) throw new ValidationError("That challenge is not open to your team yet");
 
-    // Any path the team has ever entered remains open and solvable!
-    if (pathChallenge) {
-      const hasEntered = teamPaths.some((p) => p.pathId === pathChallenge.pathId);
-      if (!hasEntered) {
-        throw new ValidationError("That challenge belongs to a path your team has not entered");
+      // Any path the team has ever entered remains open and solvable!
+      if (pathChallenge) {
+        const hasEntered = teamPaths.some((p) => p.pathId === pathChallenge.pathId);
+        if (!hasEntered) {
+          throw new ValidationError("That challenge belongs to a path your team has not entered");
+        }
       }
     }
   }
@@ -165,6 +170,12 @@ export async function submitFlag(
     // syncUnlocks then picks up on the very next line.
     let fragment: string | null = null;
     if (pathChallenge?.isPathFinal && pathChallenge.fragmentKey) {
+      if (!teamPaths.some((p) => p.pathId === pathChallenge.pathId)) {
+        await createTeamPath(
+          { eventId, teamId, pathId: pathChallenge.pathId, entryReason: "initial", rewardMultiplier: "1.00" },
+          tx,
+        );
+      }
       await createFragment(
         { eventId, teamId, fragmentKey: pathChallenge.fragmentKey, challengeId },
         tx,
