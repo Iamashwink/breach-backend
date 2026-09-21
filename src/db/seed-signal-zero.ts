@@ -9,10 +9,16 @@
  */
 import { logger } from "@/loggers/logger";
 import { importChallenges } from "@/db/import-challenges";
+import { seedAdmins } from "@/db/seed-admins";
 
-importChallenges()
+async function main() {
+  await importChallenges();
+  await seedAdmins();
+  logger.info("seed: complete");
+}
+
+main()
   .then(() => {
-    logger.info("seed: complete");
     process.exit(0);
   })
   .catch((err) => {

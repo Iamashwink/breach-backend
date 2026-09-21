@@ -30,6 +30,7 @@ services:
       - "${PORT:-8080}:8080"
     volumes:
       - ./src:/app/src
+      - ./entrypoint.sh:/app/entrypoint.sh
     depends_on:
       postgres:
         condition: service_healthy

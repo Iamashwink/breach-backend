@@ -12,7 +12,8 @@
     "db:seed": "bun run src/db/seed-signal-zero.ts",
     "db:import": "bun run src/db/import-challenges.ts",
     "db:publish": "bun run src/db/publish-signal-zero.ts",
-    "db:admin": "bun run src/db/create-admin.ts"
+    "db:admin": "bun run src/db/create-admin.ts",
+    "db:seed:admins": "bun run src/db/seed-admins.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",

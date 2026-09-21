@@ -196,7 +196,8 @@ Admin: `GET|POST /admin/events/:eventId/time-glitches`,
 - `bun run db:migrate` — apply migrations manually; application startup also applies pending migrations
 - `bun run db:seed` — load Signal Zero content
 - `bun run db:publish` — open the event for play (or `-- --close` to shut it)
-- `bun run db:admin` — create or promote an admin
+- `bun run db:admin` — create or promote an individual admin
+- `bun run db:seed:admins` — seed 3 administrative logins into the database
 - `bun run db:studio` — open Drizzle Studio
 
 ## Docker
